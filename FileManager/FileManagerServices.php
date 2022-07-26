@@ -50,16 +50,14 @@ class FileManagerServices
         $uploadedFile = self::getUploadedFileOrNull();
 
         if (!$uploadedFile) {
-            $response->setContent(json_encode(['status' => 'error', 'message' => 'Файл не передан'],
-                JSON_THROW_ON_ERROR));
+            $response->setContent(json_encode(['status' => 'error', 'message' => 'Файл не передан']));
             $response->setStatusCode(Response::HTTP_BAD_REQUEST);
             $response->send();
             exit();
         }
 
         if ($uploadedFile->getError() > 0) {
-            $response->setContent(json_encode(['status' => 'error', 'message' => $uploadedFile->getErrorMessage()],
-                JSON_THROW_ON_ERROR));
+            $response->setContent(json_encode(['status' => 'error', 'message' => $uploadedFile->getErrorMessage()]));
             $response->setStatusCode(Response::HTTP_BAD_REQUEST);
             $response->send();
             exit();
@@ -69,8 +67,7 @@ class FileManagerServices
 
         if (self::existsFileInDb($uploadedFileInfo['hash'])) {
             $response->setStatusCode(Response::HTTP_BAD_REQUEST);
-            $response->setContent(json_encode(['status' => 'error', 'message' => 'Файл ужe загружен'],
-                JSON_THROW_ON_ERROR));
+            $response->setContent(json_encode(['status' => 'error', 'message' => 'Файл ужe загружен']));
 
             $response->send();
             exit();
@@ -96,7 +93,7 @@ class FileManagerServices
                 'url' => $savedFile->url,
                 'hash' => $savedFile->hash,
             ],
-        ], JSON_THROW_ON_ERROR));
+        ]));
 
         $response->send();
         exit();
@@ -126,7 +123,7 @@ class FileManagerServices
             $output['message'] = 'Здесь какая-то ошибка! Пожалуйста, попробуйте снова.';
         }
 
-        $response->setContent(json_encode($output, JSON_THROW_ON_ERROR));
+        $response->setContent(json_encode($output));
         $response->send();
         exit();
     }
@@ -143,7 +140,7 @@ class FileManagerServices
             $output['status'] = 'ERROR';
             $output['message'] = 'Файл не найден.';
             $response = new Response();
-            $response->setContent(json_encode($output, JSON_THROW_ON_ERROR));
+            $response->setContent(json_encode($output));
             $response->headers->set('Content-Type', 'application/json');
 
             $response->send();
