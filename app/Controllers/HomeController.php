@@ -3,7 +3,7 @@
 namespace App\Controllers;
 
 use App\View;
-use FileManager\Http\Response\Response;
+use FileManager\Modules\Http\Response\Response;
 
 class HomeController
 {

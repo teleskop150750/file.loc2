@@ -3,13 +3,13 @@
 namespace FileManager;
 
 use FileManager\Entities\FileEntity;
-use FileManager\Http\Request\ServerRequestFactory;
-use FileManager\Http\Request\UploadedFile;
-use FileManager\Http\Response\BinaryFileResponse;
-use FileManager\Http\Response\Mime\FileInfoMimeTypeGuesser;
-use FileManager\Http\Response\Response;
-use FileManager\Http\Response\ResponseHeaderBag;
 use FileManager\Models\File;
+use FileManager\Modules\Http\Request\ServerRequestFactory;
+use FileManager\Modules\Http\Request\UploadedFile;
+use FileManager\Modules\Http\Response\BinaryFileResponse;
+use FileManager\Modules\Http\Response\Response;
+use FileManager\Modules\Http\Response\ResponseHeaderBag;
+use FileManager\Modules\Mime\FileInfoMimeTypeGuesser;
 use FileManager\Utils\Storage;
 use FileManager\Utils\Str;
 use JetBrains\PhpStorm\ArrayShape;
