@@ -9,9 +9,7 @@ use JsonException;
 
 class ServerRequestFactory
 {
-    /**
-     * @throws JsonException
-     */
+
     public static function fromGlobal(): ServerRequest
     {
         $globals = SuperGlobal::extract();

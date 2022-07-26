@@ -12,9 +12,8 @@ Router::get('/', [HomeController::class, 'index']);
 Router::get('/test', [HomeController::class, 'test']);
 Router::get('/files', [FileController::class, 'index']);
 Router::get('/files/create', [FileController::class, 'create']);
-Router::post('/files', [FileController::class, 'store']);
-Router::get('/files/(:any)', [FileController::class, 'show']);
-Router::delete('/files/(:any)', [FileController::class, 'delete']);
+Router::post('/file-manager', [FileController::class, 'fileManager']);
+Router::get('/file-manager', [FileController::class, 'fileManager']);
 
 /**
  * Маршрут не определен

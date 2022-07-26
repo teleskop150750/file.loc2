@@ -204,8 +204,6 @@ class Response
         if (\function_exists('fastcgi_finish_request')) {
             fastcgi_finish_request();
         }
-
-        die();
     }
 
     public function setContent(?string $content): static

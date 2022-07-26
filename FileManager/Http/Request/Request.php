@@ -59,10 +59,55 @@ class Request extends Message
         $this->setHeaders($headers);
     }
 
+    public function getRequestTarget(): string
+    {
+        if ($this->requestTarget) {
+            return $this->requestTarget;
+        }
+
+        $path = $this->uri->getPath();
+        $query = $this->uri->getQuery();
+
+        if (empty($path)) {
+            $path = '/';
+        }
+
+        if (!empty($query)) {
+            $path .= '?' . $query;
+        }
+
+        return $path;
+    }
+
+    public function withRequestTarget($requestTarget): Request
+    {
+        if (!is_string($requestTarget)) {
+            throw new InvalidArgumentException('Целевой объект запроса должен быть строкой.');
+        }
+
+        if (preg_match('/\s/', $requestTarget)) {
+            throw new InvalidArgumentException('Цель запроса не может содержать никаких пробелов.');
+        }
+
+        $clone = clone $this;
+        $clone->requestTarget = $requestTarget;
+
+        return $clone;
+    }
 
     public function getMethod(): string
     {
         return $this->method;
+    }
+
+    public function withMethod($method): Request
+    {
+        $this->assertMethod($method);
+
+        $clone = clone $this;
+        $clone->method = $method;
+
+        return $clone;
     }
 
     public function getUri(): Uri
@@ -70,6 +115,24 @@ class Request extends Message
         return $this->uri;
     }
 
+    public function withUri(Uri $uri, $preserveHost = false): Request
+    {
+        $host = $uri->getHost();
+
+        $clone = clone $this;
+        $clone->uri = $uri;
+
+        if (
+            (!$preserveHost && $host !== '') ||
+            ($preserveHost && !$this->hasHeader('Host') && $host !== '')
+        ) {
+            $headers = $this->getHeaders();
+            $headers['host'] = $host;
+            $clone->setHeaders($headers);
+        }
+
+        return $clone;
+    }
 
     protected function assertMethod($method): void
     {

@@ -4,11 +4,10 @@ declare(strict_types=1);
 namespace FileManager\Http\Request;
 
 use InvalidArgumentException;
-use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\StreamInterface;
 use const PREG_SET_ORDER;
 
-class Message implements MessageInterface
+class Message
 {
     protected string $protocolVersion = '1.1';
 
@@ -25,18 +24,12 @@ class Message implements MessageInterface
         '3.0',
     ];
 
-    /**
-     * {@inheritdoc}
-     */
     public function getProtocolVersion(): string
     {
         return $this->protocolVersion;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function withProtocolVersion($version): MessageInterface
+    public function withProtocolVersion($version)
     {
         $clone = clone $this;
         $clone->protocolVersion = $version;
@@ -44,9 +37,6 @@ class Message implements MessageInterface
         return $clone;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getHeaders(): array
     {
         $headers = $this->headers;
@@ -63,9 +53,6 @@ class Message implements MessageInterface
         return $headers;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function hasHeader($name): bool
     {
         $name = strtolower($name);
@@ -73,9 +60,6 @@ class Message implements MessageInterface
         return isset($this->headers[$name]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getHeader($name): array
     {
         $name = strtolower($name);
@@ -87,18 +71,12 @@ class Message implements MessageInterface
         return [];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getHeaderLine($name): string
     {
         return implode(', ', $this->getHeader($name));
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function withHeader($name, $value): Message|MessageInterface
+    public function withHeader($name, $value): Messag
     {
         $origName = $name;
 
@@ -112,10 +90,7 @@ class Message implements MessageInterface
         return $clone;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function withAddedHeader($name, $value): MessageInterface
+    public function withAddedHeader($name, $value)
     {
         $origName = $name;
 
@@ -134,10 +109,7 @@ class Message implements MessageInterface
         return $clone;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function withoutHeader($name): MessageInterface
+    public function withoutHeader($name)
     {
         $origName = $name;
         $name = strtolower($name);
@@ -148,18 +120,12 @@ class Message implements MessageInterface
         return $clone;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBody(): StreamInterface
     {
         return $this->body;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function withBody(StreamInterface $body): MessageInterface
+    public function withBody(StreamInterface $body)
     {
         $clone = clone $this;
         $clone->body = $body;

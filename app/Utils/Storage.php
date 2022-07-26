@@ -34,9 +34,9 @@ class Storage
             clearstatcache(false, $path);
 
             return true;
-        } else {
-            return false;
         }
+
+        return false;
     }
 
     /**

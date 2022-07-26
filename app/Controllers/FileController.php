@@ -2,10 +2,9 @@
 
 namespace App\Controllers;
 
-use App\Helper;
 use App\Models\File;
 use App\View;
-use FileManager\Services\FileManagerServices;
+use FileManager\FileManagerServices;
 use JetBrains\PhpStorm\NoReturn;
 use JsonException;
 
@@ -25,7 +24,6 @@ class FileController
             [
                 'page_title' => 'Файлы',
                 'page_subtitle' => '',
-
                 'files' => $files,
             ],
             'dashboard',
@@ -62,25 +60,11 @@ class FileController
     }
 
     /**
-     * STORE
-     *
      * @throws JsonException
      */
     #[NoReturn]
-    public function store(): void
+    public function fileManager(): void
     {
-        FileManagerServices::upload();
-    }
-
-    /**
-     * DELETE
-     *
-     * @param  string  $id
-     * @throws JsonException
-     */
-    #[NoReturn]
-    public function delete(string $id): void
-    {
-        FileManagerServices::delete();
+        FileManagerServices::execute();
     }
 }

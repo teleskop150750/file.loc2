@@ -9,7 +9,6 @@ class FileInfoMimeTypeGuesser
 {
     private ?string $magicFile;
 
-
     public function __construct(string $magicFile = null)
     {
         $this->magicFile = $magicFile;

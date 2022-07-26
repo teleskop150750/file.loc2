@@ -1,6 +1,6 @@
 <?php
 
-namespace FileManager\Services;
+namespace FileManager;
 
 use App\Helper;
 use App\Models\File;
@@ -19,6 +19,27 @@ use JsonException;
 
 class FileManagerServices
 {
+    private const FILE_FIELD_NAME = 'file';
+    private const DOWNLOAD_GET_PARAMETER = 'get_file';
+    private const DELETE_GET_PARAMETER = 'delete_file';
+
+    /**
+     * @throws JsonException
+     */
+    #[NoReturn]
+    public static function execute(): void
+    {
+        $queryParams = ServerRequestFactory::fromGlobal()->getQueryParams();
+
+        if (isset($queryParams[self::DOWNLOAD_GET_PARAMETER])) {
+            self::download($queryParams[self::DOWNLOAD_GET_PARAMETER]);
+        } elseif (isset($queryParams[self::DELETE_GET_PARAMETER])) {
+            self::delete($queryParams[self::DELETE_GET_PARAMETER]);
+        } else {
+            self::upload();
+        }
+    }
+
     /**
      * @throws JsonException
      */
@@ -38,6 +59,19 @@ class FileManagerServices
             );
             $response->setStatusCode(Response::HTTP_BAD_REQUEST);
             $response->send();
+            exit();
+        }
+
+        if ($uploadedFile->getError() > 0) {
+            $response->setContent(
+                json_encode(
+                    ['status' => 'error', 'message' => $uploadedFile->getErrorMessage()],
+                    JSON_THROW_ON_ERROR
+                )
+            );
+            $response->setStatusCode(Response::HTTP_BAD_REQUEST);
+            $response->send();
+            exit();
         }
 
         $uploadedFileInfo = self::getUploadedFileInfo($uploadedFile);
@@ -48,6 +82,7 @@ class FileManagerServices
                 JSON_THROW_ON_ERROR));
 
             $response->send();
+            exit();
         }
 
         self::move($uploadedFile, $uploadedFileInfo['hashName']);
@@ -57,6 +92,7 @@ class FileManagerServices
         if (!$savedFile) {
             $response->setStatusCode(Response::HTTP_BAD_REQUEST);
             $response->send();
+            exit();
         }
 
         $response->setStatusCode(Response::HTTP_CREATED);
@@ -72,16 +108,15 @@ class FileManagerServices
         ], JSON_THROW_ON_ERROR));
 
         $response->send();
+        exit();
     }
-
 
     /**
      * @throws JsonException
      */
     #[NoReturn]
-    public static function delete(): void
+    public static function delete(string $id): void
     {
-        $id = 1;
         $response = new Response();
         $response->headers->set('Content-Type', 'application/json');
         $output = [];
@@ -89,8 +124,8 @@ class FileManagerServices
         $file = File::show($id);
 
         if ($file) {
-            Storage::delete(Storage::getFullPath($file['name']));
             File::delete($file['id']);
+            Storage::delete(Storage::getFullPath($file['name']));
             $response->setStatusCode(Response::HTTP_OK);
             $output['status'] = 'SUCCESS';
             $output['message'] = 'Этот процесс был успешно завершен!';
@@ -101,17 +136,16 @@ class FileManagerServices
         }
 
         $response->setContent(json_encode($output, JSON_THROW_ON_ERROR));
-
         $response->send();
+        exit();
     }
 
     /**
      * @throws JsonException
      */
     #[NoReturn]
-    public static function download(): void
+    public static function download(string $id): void
     {
-        $id = 1;
         $file = File::show($id);
 
         if (!$file) {
@@ -122,6 +156,7 @@ class FileManagerServices
             $response->headers->set('Content-Type', 'application/json');
 
             $response->send();
+            exit();
         }
 
         $fileName = $file['name'];
@@ -138,8 +173,8 @@ class FileManagerServices
         $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, $fileName);
 
         $response->send();
+        exit();
     }
-
 
     #[ArrayShape(['hashName' => "string", 'hash' => "string", 'url' => "string"])]
     private static function getUploadedFileInfo(UploadedFile $file): array
@@ -165,9 +200,9 @@ class FileManagerServices
      */
     private static function getUploadedFileOrNull(): ?UploadedFile
     {
-        $serverRequest = ServerRequestFactory::fromGlobal();
+        $uploadedFiles = ServerRequestFactory::fromGlobal()->getUploadedFiles();
 
-        return $serverRequest->getUploadedFiles()['file'] ?? null;
+        return $uploadedFiles[self::FILE_FIELD_NAME] ?? null;
     }
 
     private static function move(UploadedFile $uploadedFile, string $name): void

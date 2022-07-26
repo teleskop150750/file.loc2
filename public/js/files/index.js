@@ -4,9 +4,7 @@
     const buttonHandler = async (event, button) => {
         const id = button.dataset.id;
         try {
-            const response = await fetch(`/files/${id}`, {
-                method: 'DELETE',
-            });
+            const response = await fetch(`/file-manager?delete_file=${id}`);
             const result = await response.json();
             if (result.status === 'error') {
                 console.error(result.message);
