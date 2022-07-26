@@ -1,6 +1,6 @@
 <?php
 
-use App\Database;
+use FileManager\Db\Database;
 
 /**
  * Create DB tables, indexes & relations

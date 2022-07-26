@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Models;
+namespace FileManager\Models;
 
-use App\Database;
-use App\Helper;
+use FileManager\Db\Database;
 use FileManager\Entities\FileEntity;
 
 class File

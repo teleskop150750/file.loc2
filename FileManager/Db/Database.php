@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace FileManager\Db;
 
 use PDO;
 use PDOException;

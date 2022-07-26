@@ -2,9 +2,9 @@
 
 namespace App\Controllers;
 
-use App\Models\File;
 use App\View;
 use FileManager\FileManagerServices;
+use FileManager\Models\File;
 use JetBrains\PhpStorm\NoReturn;
 use JsonException;
 
