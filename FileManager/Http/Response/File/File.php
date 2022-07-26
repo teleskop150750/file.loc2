@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Main\File;
+namespace FileManager\Http\Response\File;
 
 use RuntimeException;
 

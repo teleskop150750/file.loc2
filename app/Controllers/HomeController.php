@@ -2,12 +2,8 @@
 
 namespace App\Controllers;
 
-use App\Helper;
-use App\Http\Main\Response;
-use App\Http\Psr7\Utils\UploadedFileHelper;
 use App\View;
-use App\Http\Psr7\Stream;
-use App\Http\Psr7\UploadedFile;
+use FileManager\Http\Response\Response;
 
 class HomeController
 {

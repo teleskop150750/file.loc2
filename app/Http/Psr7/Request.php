@@ -3,13 +3,11 @@ declare(strict_types=1);
 
 namespace App\Http\Psr7;
 
+use FileManager\Http\Request\Uri;
+use InvalidArgumentException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
-use App\Http\Psr7\Message;
-use App\Http\Psr7\Uri;
-use InvalidArgumentException;
-
 
 
 class Request extends Message implements RequestInterface

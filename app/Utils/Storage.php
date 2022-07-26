@@ -73,10 +73,10 @@ class Storage
 
     /**
      * @param  string  $path
-     * @param  resource  $file
+     * @param  mixed  $file
      * @return void
      */
-    public static function store(string $path, $file): void
+    public static function store(string $path, mixed $file): void
     {
         self::checkAndCreateDir($path);
         $result = move_uploaded_file($file, $path);

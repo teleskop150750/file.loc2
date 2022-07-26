@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Main;
+namespace FileManager\Http\Response;
 
 class HeaderUtils
 {

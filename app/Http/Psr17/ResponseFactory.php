@@ -3,14 +3,13 @@ declare(strict_types=1);
 
 namespace App\Http\Psr17;
 
-use Psr\Http\Message\ResponseFactoryInterface;
-use Psr\Http\Message\ResponseInterface;
-use App\Http\Psr17\StreamFactory;
 use App\Http\Psr17\Utils\SuperGlobal;
 use App\Http\Psr7\Response;
-
-use function str_replace;
+use FileManager\Http\Request\StreamFactory;
+use Psr\Http\Message\ResponseFactoryInterface;
+use Psr\Http\Message\ResponseInterface;
 use function extract;
+use function str_replace;
 
 class ResponseFactory implements ResponseFactoryInterface
 {

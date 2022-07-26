@@ -1,12 +1,14 @@
 <?php
 
 
-namespace App\Http\Main;
+namespace FileManager\Http\Response;
 
-use App\Helper;
-use App\Http\Main\File\File;
+use FileManager\Http\Response\File\File;
 use LogicException;
 use RuntimeException;
+use function App\Http\Response\mb_detect_encoding;
+use function App\Http\Response\mb_strlen;
+use function App\Http\Response\mb_substr;
 
 class BinaryFileResponse extends Response
 {
@@ -14,7 +16,7 @@ class BinaryFileResponse extends Response
 
     protected File $file;
     protected int $offset = 0;
-    protected int $maxlen = -1;
+    protected int $maxLength = -1;
     protected bool $deleteFileAfterSend = false;
 
     public function __construct(
@@ -99,14 +101,14 @@ class BinaryFileResponse extends Response
             return parent::sendContent();
         }
 
-        if (0 === $this->maxlen) {
+        if (0 === $this->maxLength) {
             return $this;
         }
 
         $out = fopen('php://output', 'wb');
         $file = fopen($this->file->getPathname(), 'rb');
 
-        stream_copy_to_stream($file, $out, $this->maxlen, $this->offset);
+        stream_copy_to_stream($file, $out, $this->maxLength, $this->offset);
 
         fclose($out);
         fclose($file);

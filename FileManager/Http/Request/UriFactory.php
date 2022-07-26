@@ -1,23 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Http\Psr17;
+namespace FileManager\Http\Request;
 
-use Psr\Http\Message\UriFactoryInterface;
-use Psr\Http\Message\UriInterface;
-use App\Http\Psr7\Uri;
-
-class UriFactory implements UriFactoryInterface
+class UriFactory
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function createUri(string $uri = ''): UriInterface
-    {
-        return new Uri($uri);
-    }
-
-    public static function fromGlobal(): UriInterface
+    public static function fromGlobal(): Uri
     {
         $server = $_SERVER ?? [];
 
@@ -77,10 +65,5 @@ class UriFactory implements UriFactoryInterface
         }
 
         return new Uri($uri);
-    }
-
-    public static function fromNew(): UriInterface
-    {
-        return new Uri();
     }
 }

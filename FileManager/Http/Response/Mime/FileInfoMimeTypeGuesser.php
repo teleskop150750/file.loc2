@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Main\Mime;
+namespace FileManager\Http\Response\Mime;
 
 use InvalidArgumentException;
 use LogicException;
@@ -20,9 +20,6 @@ class FileInfoMimeTypeGuesser
         return \function_exists('finfo_open');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function guessMimeType(string $path): ?string
     {
         if (!is_file($path) || !is_readable($path)) {

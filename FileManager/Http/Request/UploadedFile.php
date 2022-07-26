@@ -1,11 +1,10 @@
 <?php
 
 
-namespace App\Http\Psr7;
+namespace FileManager\Http\Request;
 
 use FileManager\Http\Request\Stream;
 use Psr\Http\Message\StreamInterface;
-use Psr\Http\Message\UploadedFileInterface;
 use RuntimeException;
 use const LOCK_EX;
 use const UPLOAD_ERR_CANT_WRITE;
@@ -17,7 +16,7 @@ use const UPLOAD_ERR_NO_TMP_DIR;
 use const UPLOAD_ERR_OK;
 use const UPLOAD_ERR_PARTIAL;
 
-class UploadedFile implements UploadedFileInterface
+class UploadedFile
 {
     /**
      * Полный путь к файлу, предоставленному клиентом.
@@ -85,9 +84,6 @@ class UploadedFile implements UploadedFileInterface
         $this->sapi = PHP_SAPI;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getStream(): StreamInterface
     {
         if ($this->isMoved) {
@@ -111,9 +107,6 @@ class UploadedFile implements UploadedFileInterface
         return $this->stream;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function moveTo($targetPath): void
     {
         if ($this->isMoved) {
@@ -162,33 +155,21 @@ class UploadedFile implements UploadedFileInterface
         unset($content, $this->stream);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getSize(): ?int
     {
         return $this->size;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getError(): int
     {
         return $this->error;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getClientFilename(): ?string
     {
         return $this->name;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getClientMediaType(): ?string
     {
         return $this->type;

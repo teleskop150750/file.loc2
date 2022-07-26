@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Http\Psr7;
+namespace FileManager\Http\Request;
 
-use Psr\Http\Message\UriInterface;
 use InvalidArgumentException;
 
-class Uri implements UriInterface
+class Uri
 {
     /**
      *    foo://example.com:8042/over/there?name=ferret#nose
@@ -42,21 +41,14 @@ class Uri implements UriInterface
 
     public function __construct(string $uri = '')
     {
-        $this->assertString($uri, 'uri');
         $this->init((array) parse_url($uri));
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getScheme(): string
     {
         return $this->scheme;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getAuthority(): string
     {
         $authority = '';
@@ -74,9 +66,6 @@ class Uri implements UriInterface
         return $authority;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getUserInfo(): string
     {
         $userInfo = $this->user;
@@ -88,162 +77,31 @@ class Uri implements UriInterface
         return $userInfo;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getHost(): string
     {
         return $this->host;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getPort(): ?int
     {
         return $this->port;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getPath(): string
     {
         return $this->path;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getQuery(): string
     {
         return $this->query;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getFragment(): string
     {
         return $this->fragment;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function withScheme($scheme): UriInterface|Uri
-    {
-        $this->assertScheme($scheme);
-
-        $scheme = $this->filter('scheme', ['scheme' => $scheme]);
-
-        $clone = clone $this;
-        $clone->scheme = $scheme;
-
-        return $clone;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function withUserInfo($user, $password = null): UriInterface|Uri
-    {
-        $this->assertString($user, 'user');
-        $user = $this->filter('user', ['user' => $user]);
-
-        if ($password) {
-            $this->assertString($password, 'pass');
-            $password = $this->filter('pass', ['pass' => $password]);
-        }
-
-        $clone = clone $this;
-        $clone->user = $user;
-        $clone->pass = $password;
-
-        return $clone;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function withHost($host): UriInterface|Uri
-    {
-        $this->assertHost($host);
-
-        $host = $this->filter('host', ['host' => $host]);
-
-        $clone = clone $this;
-        $clone->host = $host;
-
-        return $clone;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function withPort($port): UriInterface|Uri
-    {
-        $this->assertPort($port);
-
-        $port = $this->filter('port', ['port' => $port]);
-
-        $clone = clone $this;
-        $clone->port = $port;
-
-        return $clone;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function withPath($path): UriInterface|Uri
-    {
-        $this->assertString($path, 'path');
-
-        $path = $this->filter('path', ['path' => $path]);
-
-        $clone = clone $this;
-        $clone->path = '/'.rawurlencode(ltrim($path, '/'));
-
-        return $clone;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function withQuery($query): UriInterface|Uri
-    {
-        $this->assertString($query, 'query');
-
-        $query = $this->filter('query', ['query' => $query]);
-
-        // & => %26
-        // ? => %3F
-
-        $clone = clone $this;
-        $clone->query = $query;
-
-        return $clone;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function withFragment($fragment): UriInterface|Uri
-    {
-        $this->assertString($fragment, 'fragment');
-
-        $fragment = $this->filter('fragment', ['fragment' => $fragment]);
-
-        $clone = clone $this;
-        $clone->fragment = $fragment;
-
-        return $clone;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function __toString(): string
     {
         $uri = '';
@@ -382,62 +240,5 @@ class Uri implements UriInterface
         }
 
         return $value;
-    }
-
-
-    protected function assertScheme(string $scheme): void
-    {
-        $this->assertString($scheme, 'scheme');
-
-        $validSchemes = [
-            0 => '',
-            1 => 'http',
-            2 => 'https',
-        ];
-
-        if (!in_array($scheme, $validSchemes)) {
-            throw new InvalidArgumentException(
-                sprintf('Строка "%s" не является допустимой схемой.', $scheme)
-            );
-        }
-    }
-
-    protected function assertString($value): void
-    {
-        if (!is_string($value)) {
-            throw new InvalidArgumentException(
-                sprintf('Должно быть строкой, но %s указано.', gettype($value))
-            );
-        }
-    }
-
-    protected function assertHost(string $host): void
-    {
-        $this->assertString($host);
-
-        if (empty($host)) {
-            return;
-        }
-
-        if (!filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
-            throw new InvalidArgumentException(
-                sprintf('"%s" не является допустимым хостом', $host)
-            );
-        }
-    }
-
-    protected function assertPort(?int $port): void
-    {
-        if (!is_null($port) && !is_int($port)) {
-            throw new InvalidArgumentException(
-                sprintf('Порт должен быть целым числом или нулевым значением, но %s указан.', gettype($port))
-            );
-        }
-
-        if (!($port > 0 && $port < 65535)) {
-            throw new InvalidArgumentException(
-                sprintf('Номер порта должен находиться в диапазоне 0-65535, но %s предоставляется.', $port)
-            );
-        }
     }
 }

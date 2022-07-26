@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Http\Main;
+namespace FileManager\Http\Response;
 
-use ArrayIterator;
 
 class ResponseHeaderBag
 {

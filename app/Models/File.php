@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Database;
 use App\Helper;
+use FileManager\Entities\FileEntity;
 
 class File
 {
@@ -56,10 +57,10 @@ class File
     /**
      * STORE
      *
-     * @param object $request
+     * @param  FileEntity  $request
      * @return bool
      */
-    public static function store(object $request): bool
+    public static function store(FileEntity $request): bool
     {
         Database::query("INSERT INTO files (
             `id`,

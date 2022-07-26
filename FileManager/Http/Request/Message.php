@@ -1,9 +1,8 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Http\Psr7;
+namespace FileManager\Http\Request;
 
-use FileManager\Http\Request\Stream;
 use InvalidArgumentException;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\StreamInterface;

@@ -12,15 +12,14 @@ declare(strict_types=1);
 
 namespace App\Http\Psr17;
 
-use Psr\Http\Message\RequestFactoryInterface;
-use Psr\Http\Message\RequestInterface;
-use App\Http\Psr17\UriFactory;
-use App\Http\Psr17\StreamFactory;
 use App\Http\Psr17\Utils\SuperGlobal;
 use App\Http\Psr7\Request;
-
-use function str_replace;
+use FileManager\Http\Request\StreamFactory;
+use FileManager\Http\Request\UriFactory;
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\RequestInterface;
 use function extract;
+use function str_replace;
 
 class RequestFactory implements RequestFactoryInterface
 {

@@ -1,11 +1,7 @@
 <?php
 
-namespace App\Http\Main;
+namespace FileManager\Http\Response;
 
-use App\Helper;
-use DateTime;
-use DateTimeImmutable;
-use DateTimeInterface;
 use InvalidArgumentException;
 use JetBrains\PhpStorm\NoReturn;
 
@@ -84,8 +80,6 @@ class Response
     protected int $statusCode;
 
     protected string $statusText;
-
-    protected string $charset;
 
     public static array $statusTexts = [
         100 => 'Continue',
@@ -211,7 +205,7 @@ class Response
             fastcgi_finish_request();
         }
 
-        exit();
+        die();
     }
 
     public function setContent(?string $content): static

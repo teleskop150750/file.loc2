@@ -10,17 +10,16 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Psr7;
+namespace FileManager\Http\Request;
 
-use Psr\Http\Message\StreamInterface;
 use InvalidArgumentException;
+use Psr\Http\Message\StreamInterface;
 use RuntimeException;
-
-
+use const PREG_OFFSET_CAPTURE;
 use const SEEK_CUR;
 use const SEEK_END;
 use const SEEK_SET;
-use const PREG_OFFSET_CAPTURE;
+
 
 class Stream implements StreamInterface
 {
@@ -302,7 +301,6 @@ class Stream implements StreamInterface
 
         return $this->getContents();
     }
-
 
     protected function assertStream($stream): void
     {

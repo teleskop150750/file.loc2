@@ -2,14 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Psr17;
+namespace FileManager\Http\Request;
 
-use Psr\Http\Message\StreamInterface;
-use Psr\Http\Message\StreamFactoryInterface;
-use App\Http\Psr7\Stream;
 use InvalidArgumentException;
+use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Http\Message\StreamInterface;
 use RuntimeException;
-
 use function fopen;
 use function fwrite;
 use function is_resource;
@@ -23,7 +21,7 @@ class StreamFactory implements StreamFactoryInterface
      */
     public function createStream(string $content = ''): StreamInterface
     {
-        $resource = @fopen('php://temp', 'r+');
+        $resource = @fopen('php://temp', 'rb+');
 
         self::assertResource($resource);
 
@@ -38,7 +36,7 @@ class StreamFactory implements StreamFactoryInterface
      */
     public function createStreamFromFile(string $filename, string $mode = 'r'): StreamInterface
     {
-        if ($mode === '' || !preg_match('/^[rwaxce]{1}[bt]{0,1}[+]{0,1}+$/', $mode)) {
+        if ($mode === '' || !preg_match('/^[rwaxce][bt]?[+]?$/', $mode)) {
             throw new InvalidArgumentException(
                 sprintf(
                     'Invalid file opening mode "%s"',
