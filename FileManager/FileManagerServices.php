@@ -51,24 +51,16 @@ class FileManagerServices
         $uploadedFile = self::getUploadedFileOrNull();
 
         if (!$uploadedFile) {
-            $response->setContent(
-                json_encode(
-                    ['status' => 'error', 'message' => 'Файл не передан'],
-                    JSON_THROW_ON_ERROR
-                )
-            );
+            $response->setContent(json_encode(['status' => 'error', 'message' => 'Файл не передан'],
+                JSON_THROW_ON_ERROR));
             $response->setStatusCode(Response::HTTP_BAD_REQUEST);
             $response->send();
             exit();
         }
 
         if ($uploadedFile->getError() > 0) {
-            $response->setContent(
-                json_encode(
-                    ['status' => 'error', 'message' => $uploadedFile->getErrorMessage()],
-                    JSON_THROW_ON_ERROR
-                )
-            );
+            $response->setContent(json_encode(['status' => 'error', 'message' => $uploadedFile->getErrorMessage()],
+                JSON_THROW_ON_ERROR));
             $response->setStatusCode(Response::HTTP_BAD_REQUEST);
             $response->send();
             exit();
@@ -124,11 +116,11 @@ class FileManagerServices
         $file = File::show($id);
 
         if ($file) {
-            File::delete($file['id']);
-            Storage::delete(Storage::getFullPath($file['name']));
             $response->setStatusCode(Response::HTTP_OK);
             $output['status'] = 'SUCCESS';
             $output['message'] = 'Этот процесс был успешно завершен!';
+            File::delete($file['id']);
+            Storage::delete(Storage::getFullPath($file['name']));
         } else {
             $response->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
             $output['status'] = 'ERROR';
@@ -195,9 +187,7 @@ class FileManagerServices
         return (bool) File::getByHash($hash);
     }
 
-    /**
-     * @throws JsonException
-     */
+
     private static function getUploadedFileOrNull(): ?UploadedFile
     {
         $uploadedFiles = ServerRequestFactory::fromGlobal()->getUploadedFiles();
