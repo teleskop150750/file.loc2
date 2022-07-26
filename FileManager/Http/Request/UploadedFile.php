@@ -3,8 +3,9 @@
 
 namespace FileManager\Http\Request;
 
-use FileManager\Http\Request\Stream;
+use FileManager\Http\File\File;
 use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\UploadedFileInterface;
 use RuntimeException;
 use const LOCK_EX;
 use const UPLOAD_ERR_CANT_WRITE;

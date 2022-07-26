@@ -34,7 +34,7 @@ class StreamFactory implements StreamFactoryInterface
     /**
      * {@inheritdoc}
      */
-    public function createStreamFromFile(string $filename, string $mode = 'r'): StreamInterface
+    public function createStreamFromFile(string $filename, string $mode = 'rb'): StreamInterface
     {
         if ($mode === '' || !preg_match('/^[rwaxce][bt]?[+]?$/', $mode)) {
             throw new InvalidArgumentException(

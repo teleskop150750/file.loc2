@@ -3,7 +3,7 @@
 
 namespace FileManager\Http\Response;
 
-use FileManager\Http\Response\File\File;
+use FileManager\Http\File\File;
 use LogicException;
 use RuntimeException;
 use function App\Http\Response\mb_detect_encoding;
