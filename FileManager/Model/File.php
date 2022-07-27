@@ -1,6 +1,6 @@
 <?php
 
-namespace FileManager\Models;
+namespace FileManager\Model;
 
 use FileManager\Db\Database;
 use FileManager\Entity\FileEntity;

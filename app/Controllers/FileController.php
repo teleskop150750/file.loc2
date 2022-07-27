@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use App\View;
 use FileManager\FileManagerServices;
-use FileManager\Models\File;
+use FileManager\Model\File;
 use JetBrains\PhpStorm\NoReturn;
 use JsonException;
 

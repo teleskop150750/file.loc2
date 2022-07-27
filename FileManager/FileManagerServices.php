@@ -4,7 +4,7 @@ namespace FileManager;
 
 use FileManager\Entity\FileEntity;
 use FileManager\FileSystem\Storage;
-use FileManager\Models\File;
+use FileManager\Model\File;
 use FileManager\Modules\Http\BinaryFileResponse;
 use FileManager\Modules\Http\File\UploadedFile;
 use FileManager\Modules\Http\Request;
