@@ -36,7 +36,7 @@ class Router
      * @param  array  $params
      * @return void
      */
-    public static function __callstatic(string $method, array $params): void
+    public static function __callStatic(string $method, array $params): void
     {
         $uri = str_starts_with($params[0], '/') ? $params[0] : '/'.$params[0];
         $callback = $params[1];
@@ -155,7 +155,10 @@ class Router
         if (!method_exists($controller, $method)) {
             echo "controller and action not found";
         } else {
-            echo call_user_func_array([$controller, $method], $params);
+            $result =  call_user_func_array([$controller, $method], $params);
+            if (is_string($result)) {
+                echo $result;
+            }
         }
     }
 

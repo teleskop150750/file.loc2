@@ -2,12 +2,8 @@
 
 namespace App\Controllers;
 
-use App\Helper;
-use App\Http\Main\Response;
-use App\Http\Psr7\Utils\UploadedFileHelper;
 use App\View;
-use App\Http\Psr7\Stream;
-use App\Http\Psr7\UploadedFile;
+use FileManager\Modules\Http\Response;
 
 class HomeController
 {
@@ -59,8 +55,7 @@ class HomeController
 
         $response = new Response();
         $response->headers->set('Content-Type', 'application/json');
-        $response->setContent(json_encode(['status' => 'error', 'message' => 'Файл ужe загружен'],
-            JSON_THROW_ON_ERROR));
+        $response->setContent(json_encode(['status' => 'error', 'message' => 'Файл ужe загружен']));
 
         return $response->getContent();
 //        exit();
