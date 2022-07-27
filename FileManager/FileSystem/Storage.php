@@ -1,7 +1,8 @@
 <?php
 
-namespace FileManager\Utils;
+namespace FileManager\FileSystem;
 
+use FileManager\Utils\Str;
 use JetBrains\PhpStorm\NoReturn;
 use RuntimeException;
 

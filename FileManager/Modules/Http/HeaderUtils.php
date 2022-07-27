@@ -2,6 +2,8 @@
 
 namespace FileManager\Modules\Http;
 
+use InvalidArgumentException;
+
 class HeaderUtils
 {
     public const DISPOSITION_ATTACHMENT = 'attachment';
@@ -19,7 +21,7 @@ class HeaderUtils
      *     HeaderUtils::split("da, en-gb;q=0.8", ",;")
      *     // => ['da'], ['en-gb', 'q=0.8']]
      *
-     * @param string $separators Список символов для разделения в порядке приоритета ",", ";=", ",;="
+     * @param  string  $separators  Список символов для разделения в порядке приоритета ",", ";=", ",;="
      *
      * @return array Nested array with as many levels as there are characters in
      *               $separators
@@ -130,20 +132,23 @@ class HeaderUtils
     /**
      * Генерирует значение поля HTTP Content-Disposition.
      *
-     * @param string $disposition      One of "inline" or "attachment"
-     * @param string $filename         A unicode string
-     * @param string $filenameFallback A string containing only ASCII characters that
-     *                                 is semantically equivalent to $filename. If the filename is already ASCII,
-     *                                 it can be omitted, or just copied from $filename
+     * @param  string  $disposition       Один из "inline" или "attachment"
+     * @param  string  $filename          Строка в юникоде
+     * @param  string  $filenameFallback  Строка, содержащая только символы ASCII,
+     *                                    семантически эквивалентная $filename. Если имя файла уже является ASCII,
+     *                                    его можно опустить или просто скопировать из $filename
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      *
      * @see RFC 6266
      */
     public static function makeDisposition(string $disposition, string $filename, string $filenameFallback = ''): string
     {
         if (!\in_array($disposition, [self::DISPOSITION_ATTACHMENT, self::DISPOSITION_INLINE])) {
-            throw new \InvalidArgumentException(sprintf('The disposition must be either "%s" or "%s".', self::DISPOSITION_ATTACHMENT, self::DISPOSITION_INLINE));
+            throw new InvalidArgumentException(
+                sprintf('Расположение должно быть либо "%s", либо "%s".',
+                    self::DISPOSITION_ATTACHMENT, self::DISPOSITION_INLINE)
+            );
         }
 
         if ('' === $filenameFallback) {
@@ -152,17 +157,18 @@ class HeaderUtils
 
         // filenameFallback is not ASCII.
         if (!preg_match('/^[\x20-\x7e]*$/', $filenameFallback)) {
-            throw new \InvalidArgumentException('The filename fallback must only contain ASCII characters.');
+            throw new InvalidArgumentException('Резервная копия имени файла должна содержать только символы ASCII.');
         }
 
-        // percent characters aren't safe in fallback.
+        // процентные символы небезопасны в fallback.
         if (str_contains($filenameFallback, '%')) {
-            throw new \InvalidArgumentException('The filename fallback cannot contain the "%" character.');
+            throw new InvalidArgumentException('Резервная копия имени файла не может содержать символ "%"..');
         }
 
         // path separators aren't allowed in either.
-        if (str_contains($filename, '/') || str_contains($filename, '\\') || str_contains($filenameFallback, '/') || str_contains($filenameFallback, '\\')) {
-            throw new \InvalidArgumentException('The filename and the fallback cannot contain the "/" and "\\" characters.');
+        if (str_contains($filename, '/') || str_contains($filename, '\\') || str_contains($filenameFallback,
+                '/') || str_contains($filenameFallback, '\\')) {
+            throw new InvalidArgumentException('Имя файла и резервная копия не могут содержать символы "/" и "\\".');
         }
 
         $params = ['filename' => $filenameFallback];

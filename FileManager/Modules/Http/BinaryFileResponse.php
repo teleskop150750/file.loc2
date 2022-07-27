@@ -1,14 +1,11 @@
 <?php
 
 
-namespace FileManager\Modules\Http\Response;
+namespace FileManager\Modules\Http;
 
 use FileManager\Modules\Http\File\File;
 use LogicException;
 use RuntimeException;
-use function App\Http\Response\mb_detect_encoding;
-use function App\Http\Response\mb_strlen;
-use function App\Http\Response\mb_substr;
 
 class BinaryFileResponse extends Response
 {

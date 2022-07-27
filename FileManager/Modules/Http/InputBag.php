@@ -7,38 +7,32 @@ use FileManager\Modules\Http\Exception\BadRequestException;
 final class InputBag extends ParameterBag
 {
     /**
-     * Returns a scalar input value by name.
+     * Возвращает скалярное входное значение по имени.
      *
-     * @param  string|int|float|bool|null  $default  The default value if the input key does not exist
+     * @param  string|int|float|bool|null  $default  Значение по умолчанию, если клавиша ввода не существует
      */
     public function get(string $key, mixed $default = null): string|int|float|bool|null
     {
         if (null !== $default && !is_scalar($default) && !$default instanceof \Stringable) {
-            throw new \InvalidArgumentException(sprintf('Excepted a scalar value as a 2nd argument to "%s()", "%s" given.',
+            throw new \InvalidArgumentException(sprintf('Исключено скалярное значение в качестве 2-го аргумента для "%s()", "%s" задано.',
                 __METHOD__, get_debug_type($default)));
         }
 
         $value = parent::get($key, $this);
 
         if (null !== $value && $this !== $value && !is_scalar($value)) {
-            throw new BadRequestException(sprintf('Input value "%s" contains a non-scalar value.', $key));
+            throw new BadRequestException(sprintf('Входное значение "%s" содержит нескалярное значение.', $key));
         }
 
         return $this === $value ? $default : $value;
     }
 
-    /**
-     * Replaces the current input values by a new set.
-     */
     public function replace(array $items = []): void
     {
         $this->parameters = [];
         $this->add($items);
     }
 
-    /**
-     * Adds input values.
-     */
     public function add(array $items = []): void
     {
         foreach ($items as $input => $value) {
@@ -47,8 +41,6 @@ final class InputBag extends ParameterBag
     }
 
     /**
-     * Sets an input by name.
-     *
      * @param  string|int|float|bool|array|null  $value
      */
     public function set(string $key, mixed $value): void

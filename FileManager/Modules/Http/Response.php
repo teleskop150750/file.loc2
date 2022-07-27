@@ -1,6 +1,6 @@
 <?php
 
-namespace FileManager\Modules\Http\Response;
+namespace FileManager\Modules\Http;
 
 use InvalidArgumentException;
 use JetBrains\PhpStorm\NoReturn;

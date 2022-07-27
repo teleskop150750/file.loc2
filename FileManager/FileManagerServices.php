@@ -2,19 +2,19 @@
 
 namespace FileManager;
 
-use FileManager\Entities\FileEntity;
+use FileManager\Entity\FileEntity;
+use FileManager\FileSystem\Storage;
 use FileManager\Models\File;
-use FileManager\Modules\Http\Request\ServerRequestFactory;
-use FileManager\Modules\Http\Request\UploadedFile;
-use FileManager\Modules\Http\Response\BinaryFileResponse;
-use FileManager\Modules\Http\Response\Response;
-use FileManager\Modules\Http\Response\ResponseHeaderBag;
+use FileManager\Modules\Http\BinaryFileResponse;
+use FileManager\Modules\Http\File\UploadedFile;
+use FileManager\Modules\Http\Request;
+use FileManager\Modules\Http\Response;
+use FileManager\Modules\Http\ResponseHeaderBag;
 use FileManager\Modules\Mime\FileInfoMimeTypeGuesser;
-use FileManager\Utils\Storage;
 use FileManager\Utils\Str;
-use JetBrains\PhpStorm\ArrayShape;
 use JetBrains\PhpStorm\NoReturn;
 use JsonException;
+use RuntimeException;
 
 class FileManagerServices
 {
@@ -28,7 +28,7 @@ class FileManagerServices
     #[NoReturn]
     public static function execute(): void
     {
-        $queryParams = ServerRequestFactory::fromGlobal()->getQueryParams();
+        $queryParams = Request::createFromGlobals()->query->all();
 
         if (isset($queryParams[self::DOWNLOAD_GET_PARAMETER])) {
             self::download($queryParams[self::DOWNLOAD_GET_PARAMETER]);
@@ -47,25 +47,20 @@ class FileManagerServices
     {
         $response = new Response();
         $response->headers->set('Content-Type', 'application/json');
-        $uploadedFile = self::getUploadedFileOrNull();
 
-        if (!$uploadedFile) {
-            $response->setContent(json_encode(['status' => 'error', 'message' => 'Файл не передан']));
+        try {
+            $uploadedFile = self::getUploadedFile();
+        } catch (\Exception $exception)
+        {
+            $response->setContent(json_encode(['status' => 'error', 'message' => $exception->getMessage()]));
             $response->setStatusCode(Response::HTTP_BAD_REQUEST);
             $response->send();
             exit();
         }
 
-        if ($uploadedFile->getError() > 0) {
-            $response->setContent(json_encode(['status' => 'error', 'message' => $uploadedFile->getErrorMessage()]));
-            $response->setStatusCode(Response::HTTP_BAD_REQUEST);
-            $response->send();
-            exit();
-        }
+        $uploadedFileEntity = self::getUploadedFileEntity($uploadedFile);
 
-        $uploadedFileInfo = self::getUploadedFileInfo($uploadedFile);
-
-        if (self::existsFileInDb($uploadedFileInfo['hash'])) {
+        if (self::existsFileInDb($uploadedFileEntity->hash)) {
             $response->setStatusCode(Response::HTTP_BAD_REQUEST);
             $response->setContent(json_encode(['status' => 'error', 'message' => 'Файл ужe загружен']));
 
@@ -73,9 +68,9 @@ class FileManagerServices
             exit();
         }
 
-        self::move($uploadedFile, $uploadedFileInfo['hashName']);
+        self::move($uploadedFile, $uploadedFileEntity->name);
 
-        $savedFile = self::saveInDb($uploadedFileInfo);
+        $savedFile = self::saveInDb($uploadedFileEntity);
 
         if (!$savedFile) {
             $response->setStatusCode(Response::HTTP_BAD_REQUEST);
@@ -99,9 +94,6 @@ class FileManagerServices
         exit();
     }
 
-    /**
-     * @throws JsonException
-     */
     #[NoReturn]
     public static function delete(string $id): void
     {
@@ -128,9 +120,6 @@ class FileManagerServices
         exit();
     }
 
-    /**
-     * @throws JsonException
-     */
     #[NoReturn]
     public static function download(string $id): void
     {
@@ -164,18 +153,14 @@ class FileManagerServices
         exit();
     }
 
-    #[ArrayShape(['hashName' => "string", 'hash' => "string", 'url' => "string"])]
-    private static function getUploadedFileInfo(UploadedFile $file): array
+    private static function getUploadedFileEntity(UploadedFile $file): FileEntity
     {
-        $hashName = Storage::hashName($file->getClientFilename());
-        $hash = Storage::hash($file->getFile());
-        $url = Storage::url($hashName);
+        $fileEntity = new FileEntity();
+        $fileEntity->name = Storage::hashName($file->getClientOriginalName());
+        $fileEntity->hash = Storage::hash($file->getRealPath());
+        $fileEntity->url = Storage::url($fileEntity->name);
 
-        return [
-            'hashName' => $hashName,
-            'hash' => $hash,
-            'url' => $url,
-        ];
+        return $fileEntity;
     }
 
     private static function existsFileInDb(string $hash): bool
@@ -183,31 +168,32 @@ class FileManagerServices
         return (bool) File::getByHash($hash);
     }
 
-
-    private static function getUploadedFileOrNull(): ?UploadedFile
+    private static function getUploadedFile(): UploadedFile
     {
-        $uploadedFiles = ServerRequestFactory::fromGlobal()->getUploadedFiles();
+        /** @var UploadedFile $file */
+        $file = Request::createFromGlobals()->files->get(self::FILE_FIELD_NAME);
 
-        return $uploadedFiles[self::FILE_FIELD_NAME] ?? null;
+        if (!$file) {
+            throw new RuntimeException('Файл не передан');
+        }
+
+        if ($file->getError() !== 0)  {
+            throw new RuntimeException($file->getErrorMessage());
+        }
+
+        return $file;
     }
 
     private static function move(UploadedFile $uploadedFile, string $name): void
     {
-        Storage::store(Storage::getFullPath($name), $uploadedFile->getFile());
+        Storage::store(Storage::getFullPath($name), $uploadedFile->getRealPath());
     }
 
-    private static function saveInDb(array $uploadedFileInfo): ?FileEntity
+    private static function saveInDb(FileEntity $fileEntity): ?FileEntity
     {
         do {
-            $fileId = Str::random();
-        } while (File::show($fileId));
-
-        $fileEntity = new FileEntity(
-            $fileId,
-            $uploadedFileInfo['hashName'],
-            $uploadedFileInfo['url'],
-            $uploadedFileInfo['hash'],
-        );
+            $fileEntity->id = Str::random();
+        } while (File::show($fileEntity->id));
 
         if (!File::store($fileEntity)) {
             return null;

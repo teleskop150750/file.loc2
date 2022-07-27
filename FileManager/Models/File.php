@@ -3,7 +3,7 @@
 namespace FileManager\Models;
 
 use FileManager\Db\Database;
-use FileManager\Entities\FileEntity;
+use FileManager\Entity\FileEntity;
 
 class File
 {

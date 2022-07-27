@@ -1,8 +1,9 @@
 <?php
 
-namespace FileManager\Modules\Http\Response;
+namespace FileManager\Modules\Http;
 
 
+use FileManager\Modules\Http\HeaderUtils;
 
 class ResponseHeaderBag
 {
