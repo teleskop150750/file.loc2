@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\View;
+use FileManager\FileManagerService;
 use FileManager\FileManagerServices;
 use FileManager\Model\File;
 use JetBrains\PhpStorm\NoReturn;
@@ -51,6 +52,6 @@ class FileController
     #[NoReturn]
     public function fileManager(): void
     {
-        (new FileManagerServices())->execute();
+        (new FileManagerService())->execute()();
     }
 }

@@ -32,7 +32,7 @@ if (count($data['files'])) : ?>
                                     <div class="flex items-center">
                                         <p class="ml-3 text-gray-900 whitespace-nowrap">
                                             <a href="<?= $file['url'] ?>">
-                                                <?= $file['name'] ?>
+                                                <?= $file['origin_name'] ?>
                                             </a>
                                         </p>
                                     </div>
