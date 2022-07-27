@@ -2,12 +2,9 @@
 
 namespace FileManager;
 
-use App\Helper;
 use finfo;
 use InvalidArgumentException;
-use JetBrains\PhpStorm\ArrayShape;
 use JetBrains\PhpStorm\NoReturn;
-use JsonException;
 use Exception;
 use PDO;
 use PDOException;
