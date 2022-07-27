@@ -21,7 +21,6 @@ class FileManagerServices
     private const FILE_FIELD_NAME = 'file';
     private const DOWNLOAD_GET_PARAMETER = 'get_file';
     private const DELETE_GET_PARAMETER = 'delete_file';
-    private string $date;
 
     #[NoReturn]
     public function execute(): void
@@ -42,7 +41,6 @@ class FileManagerServices
     {
         $response = new Response();
         $response->headers->set('Content-Type', 'application/json');
-        $this->prepareDate();
 
         try {
             $uploadedFile = $this->getUploadedFile();
@@ -153,7 +151,7 @@ class FileManagerServices
     {
         $fileEntity = new FileEntity();
         $fileEntity->name = Storage::hashName($file->getClientOriginalName());
-        $fileEntity->path = $this->preparePath($fileEntity->name);
+        $fileEntity->path = date('Y-m-d').'/'.$fileEntity->name;
         $fileEntity->hash = Storage::hash($file->getRealPath());
         $fileEntity->url = Storage::url($fileEntity->path);
 
@@ -197,20 +195,5 @@ class FileManagerServices
         }
 
         return $fileEntity;
-    }
-
-    private function prepareDate(): void
-    {
-        $this->date = date('Y-m-d');
-    }
-
-    private function getDate(): string
-    {
-        return $this->date;
-    }
-
-    private function preparePath(string $name): string
-    {
-        return $this->getDate().'/'.$name;
     }
 }
