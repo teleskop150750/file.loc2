@@ -5,6 +5,7 @@ use App\Controllers\HomeController;
 use App\View;
 use App\Router;
 
+
 /**
  * Web routes
  */
@@ -32,6 +33,6 @@ Router::error(static function () {
  * Раскомментируйте эту функцию для переноса таблиц
  * It will commented automatically again
  */
-// createTables();
+ createTables();
 
 Router::dispatch();

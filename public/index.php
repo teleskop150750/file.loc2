@@ -17,6 +17,7 @@ if (!isset($_SESSION['token']) || (isset($_SESSION['token-expire']) && time() > 
  */
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 require_once dirname(__DIR__) . '/env.php';
+require_once dirname(__DIR__) . '/app/migrations.php';
 require_once dirname(__DIR__) . '/routes/routes.php';
 
 /**
@@ -24,5 +25,3 @@ require_once dirname(__DIR__) . '/routes/routes.php';
  */
 ini_set('display_errors', DISPLAY_ERRORS);
 error_reporting(ERROR_REPORTING);
-
-$r = \FileManager\Modules\Http\Request::createFromGlobals();

@@ -30,17 +30,6 @@ class FileController
         );
     }
 
-    /**
-     * READ one
-     *
-     * @param  string  $id
-     * @throws JsonException
-     */
-    #[NoReturn]
-    public function show(string $id): void
-    {
-        FileManagerServices::download();
-    }
 
     /**
      * CREATE
@@ -59,12 +48,9 @@ class FileController
         );
     }
 
-    /**
-     * @throws JsonException
-     */
     #[NoReturn]
     public function fileManager(): void
     {
-        FileManagerServices::execute();
+        (new FileManagerServices())->execute();
     }
 }

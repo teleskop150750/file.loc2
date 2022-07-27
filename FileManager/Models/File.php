@@ -64,12 +64,14 @@ class File
         Database::query("INSERT INTO files (
             `id`,
             `name`,
+            `path`,
             `url`,
             `hash`
-        ) VALUES (:id, :name, :url, :hash)");
+        ) VALUES (:id, :name, :path, :url, :hash)");
         Database::bind([
             ':id' => $request->id,
             ':name' => $request->name,
+            ':path' => $request->path,
             ':url' => $request->url,
             ':hash' => $request->hash,
         ]);

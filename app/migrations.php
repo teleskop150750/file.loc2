@@ -17,6 +17,7 @@ function createTables()
 		"CREATE TABLE IF NOT EXISTS `files` (
             `id` CHAR(40) UNIQUE NOT NULL,
             `name` NVARCHAR(250) NOT NULL,
+            `path` NVARCHAR(250) NOT NULL,
             `url` NVARCHAR(250) NOT NULL,
             `hash` NVARCHAR(250) NOT NULL,
             `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -31,8 +32,8 @@ function createTables()
 	/**
 	 * Prevent to create existed tables by commenting a command that call this function
 	 */
-	$path_to_file = dirname(__DIR__) . '/src/routes.php';
-	$file_contents = file_get_contents($path_to_file);
-	$file_contents = str_replace("createTables();", "// createTables();", $file_contents);
-	file_put_contents($path_to_file, $file_contents);
+//	$path_to_file = dirname(__DIR__) . '/src/routes.php';
+//	$file_contents = file_get_contents($path_to_file);
+//	$file_contents = str_replace("createTables();", "// createTables();", $file_contents);
+//	file_put_contents($path_to_file, $file_contents);
 }

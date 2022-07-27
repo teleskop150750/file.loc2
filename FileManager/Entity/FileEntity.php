@@ -7,6 +7,7 @@ class FileEntity
     public function __construct(
         public ?string $id = null,
         public ?string $name = null,
+        public ?string $path = null,
         public ?string $url = null,
         public ?string $hash = null,
     ) {
@@ -20,6 +21,16 @@ class FileEntity
     public function getId(): string
     {
         return $this->id;
+    }
+
+    public function setPath(string $path): void
+    {
+        $this->path = $path;
+    }
+
+    public function getPath(): string
+    {
+        return $this->path;
     }
 
     public function setName(string $name): void

@@ -74,11 +74,12 @@ class Storage
 
     /**
      * @param  string  $path
-     * @param  mixed  $file
+     * @param  string|resource  $file
      * @return void
      */
     public static function store(string $path, mixed $file): void
     {
+        $path = self::getFullPath($path);
         self::checkAndCreateDir($path);
         $result = move_uploaded_file($file, $path);
 
@@ -179,7 +180,7 @@ class Storage
      */
     public static function getFullPath(string $path): string
     {
-        return self::getRootDir().$path;
+        return self::getRootStorageDir().$path;
     }
 
     /**
@@ -198,7 +199,7 @@ class Storage
      *
      * @return string
      */
-    private static function getRootDir(): string
+    private static function getRootStorageDir(): string
     {
         return $_SERVER['DOCUMENT_ROOT'].self::STORAGE_PATH;
     }

@@ -21,46 +21,41 @@ class FileManagerServices
     private const FILE_FIELD_NAME = 'file';
     private const DOWNLOAD_GET_PARAMETER = 'get_file';
     private const DELETE_GET_PARAMETER = 'delete_file';
+    private string $date;
 
-    /**
-     * @throws JsonException
-     */
     #[NoReturn]
-    public static function execute(): void
+    public function execute(): void
     {
         $queryParams = Request::createFromGlobals()->query->all();
 
         if (isset($queryParams[self::DOWNLOAD_GET_PARAMETER])) {
-            self::download($queryParams[self::DOWNLOAD_GET_PARAMETER]);
+            $this->download($queryParams[self::DOWNLOAD_GET_PARAMETER]);
         } elseif (isset($queryParams[self::DELETE_GET_PARAMETER])) {
-            self::delete($queryParams[self::DELETE_GET_PARAMETER]);
+            $this->delete($queryParams[self::DELETE_GET_PARAMETER]);
         } else {
-            self::upload();
+            $this->upload();
         }
     }
 
-    /**
-     * @throws JsonException
-     */
     #[NoReturn]
-    public static function upload(): void
+    public function upload(): void
     {
         $response = new Response();
         $response->headers->set('Content-Type', 'application/json');
+        $this->prepareDate();
 
         try {
-            $uploadedFile = self::getUploadedFile();
-        } catch (\Exception $exception)
-        {
+            $uploadedFile = $this->getUploadedFile();
+        } catch (\Exception $exception) {
             $response->setContent(json_encode(['status' => 'error', 'message' => $exception->getMessage()]));
             $response->setStatusCode(Response::HTTP_BAD_REQUEST);
             $response->send();
             exit();
         }
 
-        $uploadedFileEntity = self::getUploadedFileEntity($uploadedFile);
+        $uploadedFileEntity = $this->getUploadedFileEntity($uploadedFile);
 
-        if (self::existsFileInDb($uploadedFileEntity->hash)) {
+        if ($this->existsFileInDb($uploadedFileEntity->hash)) {
             $response->setStatusCode(Response::HTTP_BAD_REQUEST);
             $response->setContent(json_encode(['status' => 'error', 'message' => 'Файл ужe загружен']));
 
@@ -68,9 +63,9 @@ class FileManagerServices
             exit();
         }
 
-        self::move($uploadedFile, $uploadedFileEntity->name);
+        $this->move($uploadedFile, $uploadedFileEntity->path);
 
-        $savedFile = self::saveInDb($uploadedFileEntity);
+        $savedFile = $this->saveInDb($uploadedFileEntity);
 
         if (!$savedFile) {
             $response->setStatusCode(Response::HTTP_BAD_REQUEST);
@@ -85,6 +80,7 @@ class FileManagerServices
             'data' => [
                 'id' => $savedFile->id,
                 'name' => $savedFile->name,
+                'path' => $savedFile->path,
                 'url' => $savedFile->url,
                 'hash' => $savedFile->hash,
             ],
@@ -95,7 +91,7 @@ class FileManagerServices
     }
 
     #[NoReturn]
-    public static function delete(string $id): void
+    public function delete(string $id): void
     {
         $response = new Response();
         $response->headers->set('Content-Type', 'application/json');
@@ -121,7 +117,7 @@ class FileManagerServices
     }
 
     #[NoReturn]
-    public static function download(string $id): void
+    public function download(string $id): void
     {
         $file = File::show($id);
 
@@ -137,7 +133,7 @@ class FileManagerServices
         }
 
         $fileName = $file['name'];
-        $filePath = Storage::getFullPath($fileName);
+        $filePath = Storage::getFullPath($file['path']);
         $response = new BinaryFileResponse($filePath);
         $mimeTypeGuesser = new FileInfoMimeTypeGuesser();
 
@@ -153,22 +149,23 @@ class FileManagerServices
         exit();
     }
 
-    private static function getUploadedFileEntity(UploadedFile $file): FileEntity
+    private function getUploadedFileEntity(UploadedFile $file): FileEntity
     {
         $fileEntity = new FileEntity();
         $fileEntity->name = Storage::hashName($file->getClientOriginalName());
+        $fileEntity->path = $this->preparePath($fileEntity->name);
         $fileEntity->hash = Storage::hash($file->getRealPath());
-        $fileEntity->url = Storage::url($fileEntity->name);
+        $fileEntity->url = Storage::url($fileEntity->path);
 
         return $fileEntity;
     }
 
-    private static function existsFileInDb(string $hash): bool
+    private function existsFileInDb(string $hash): bool
     {
         return (bool) File::getByHash($hash);
     }
 
-    private static function getUploadedFile(): UploadedFile
+    private function getUploadedFile(): UploadedFile
     {
         /** @var UploadedFile $file */
         $file = Request::createFromGlobals()->files->get(self::FILE_FIELD_NAME);
@@ -177,19 +174,19 @@ class FileManagerServices
             throw new RuntimeException('Файл не передан');
         }
 
-        if ($file->getError() !== 0)  {
+        if ($file->getError() !== 0) {
             throw new RuntimeException($file->getErrorMessage());
         }
 
         return $file;
     }
 
-    private static function move(UploadedFile $uploadedFile, string $name): void
+    private function move(UploadedFile $uploadedFile, string $name): void
     {
-        Storage::store(Storage::getFullPath($name), $uploadedFile->getRealPath());
+        Storage::store($name, $uploadedFile->getRealPath());
     }
 
-    private static function saveInDb(FileEntity $fileEntity): ?FileEntity
+    private function saveInDb(FileEntity $fileEntity): ?FileEntity
     {
         do {
             $fileEntity->id = Str::random();
@@ -200,5 +197,20 @@ class FileManagerServices
         }
 
         return $fileEntity;
+    }
+
+    private function prepareDate(): void
+    {
+        $this->date = date('Y-m-d');
+    }
+
+    private function getDate(): string
+    {
+        return $this->date;
+    }
+
+    private function preparePath(string $name): string
+    {
+        return $this->getDate().'/'.$name;
     }
 }
