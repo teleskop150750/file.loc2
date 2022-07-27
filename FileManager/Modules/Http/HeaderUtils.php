@@ -7,23 +7,19 @@ class HeaderUtils
     public const DISPOSITION_ATTACHMENT = 'attachment';
     public const DISPOSITION_INLINE = 'inline';
 
-    /**
-     * This class should not be instantiated.
-     */
     private function __construct()
     {
     }
 
     /**
-     * Splits an HTTP header by one or more separators.
+     * Разбивает HTTP-заголовок на один или несколько разделителей.
      *
-     * Example:
+     * Пример:
      *
      *     HeaderUtils::split("da, en-gb;q=0.8", ",;")
      *     // => ['da'], ['en-gb', 'q=0.8']]
      *
-     * @param string $separators List of characters to split on, ordered by
-     *                           precedence, e.g. ",", ";=", or ",;="
+     * @param string $separators Список символов для разделения в порядке приоритета ",", ";=", ",;="
      *
      * @return array Nested array with as many levels as there are characters in
      *               $separators
@@ -54,14 +50,14 @@ class HeaderUtils
     }
 
     /**
-     * Combines an array of arrays into one associative array.
+     * Объединяет массив массивов в один ассоциативный массив.
      *
-     * Each of the nested arrays should have one or two elements. The first
-     * value will be used as the keys in the associative array, and the second
-     * will be used as the values, or true if the nested array only contains one
-     * element. Array keys are lowercased.
+     * Каждый из вложенных массивов должен содержать один или два элемента. Первый
+     * значение будет использоваться в качестве ключей в ассоциативном массиве, а второй
+     * будет использоваться в качестве значений или true, если вложенный массив содержит только один элемент.
+     * Ключи массива записываются в нижнем регистре.
      *
-     * Example:
+     * Пример:
      *
      *     HeaderUtils::combine([["foo", "abc"], ["bar"]])
      *     // => ["foo" => "abc", "bar" => true]
@@ -79,13 +75,13 @@ class HeaderUtils
     }
 
     /**
-     * Joins an associative array into a string for use in an HTTP header.
+     * Объединяет ассоциативный массив в строку для использования в заголовке HTTP.
      *
-     * The key and value of each entry are joined with "=", and all entries
-     * are joined with the specified separator and an additional space (for
-     * readability). Values are quoted if necessary.
+     * Ключ и значение каждой записи объединяются с помощью "=", и все записи
+     * соединяются указанным разделителем и дополнительным пробелом (для удобства чтения).
+     * При необходимости значения приводятся в кавычках.
      *
-     * Example:
+     * Пример:
      *
      *     HeaderUtils::toString(["foo" => "abc", "bar" => true, "baz" => "a b c"], ",")
      *     // => 'foo=abc, bar, baz="a b c"'
@@ -105,11 +101,11 @@ class HeaderUtils
     }
 
     /**
-     * Encodes a string as a quoted string, if necessary.
+     * При необходимости кодирует строку в виде строки в кавычках.
      *
-     * If a string contains characters not allowed by the "token" construct in
-     * the HTTP specification, it is backslash-escaped and enclosed in quotes
-     * to match the "quoted-string" construct.
+     * Если строка содержит символы, не разрешенные конструкцией "token" в
+     * спецификации HTTP, она экранируется обратной косой чертой и заключена в кавычки,
+     * чтобы соответствовать конструкции "строка в кавычках".
      */
     public static function quote(string $s): string
     {
@@ -121,10 +117,10 @@ class HeaderUtils
     }
 
     /**
-     * Decodes a quoted string.
+     * Декодирует строку, заключенную в кавычки.
      *
-     * If passed an unquoted string that matches the "token" construct (as
-     * defined in the HTTP specification), it is passed through verbatimly.
+     * Если передается строка без кавычек, которая соответствует конструкции "token" (как
+     * определено в спецификации HTTP), она передается дословно.
      */
     public static function unquote(string $s): string
     {
@@ -132,7 +128,7 @@ class HeaderUtils
     }
 
     /**
-     * Generates an HTTP Content-Disposition field-value.
+     * Генерирует значение поля HTTP Content-Disposition.
      *
      * @param string $disposition      One of "inline" or "attachment"
      * @param string $filename         A unicode string

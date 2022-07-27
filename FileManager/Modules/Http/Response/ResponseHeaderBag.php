@@ -3,7 +3,6 @@
 namespace FileManager\Modules\Http\Response;
 
 
-use function FileManager\Http\Response\strtr;
 
 class ResponseHeaderBag
 {

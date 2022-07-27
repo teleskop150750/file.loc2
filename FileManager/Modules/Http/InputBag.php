@@ -2,17 +2,20 @@
 
 namespace FileManager\Modules\Http;
 
+use FileManager\Modules\Http\Exception\BadRequestException;
+
 final class InputBag extends ParameterBag
 {
     /**
      * Returns a scalar input value by name.
      *
-     * @param string|int|float|bool|null $default The default value if the input key does not exist
+     * @param  string|int|float|bool|null  $default  The default value if the input key does not exist
      */
     public function get(string $key, mixed $default = null): string|int|float|bool|null
     {
         if (null !== $default && !is_scalar($default) && !$default instanceof \Stringable) {
-            throw new \InvalidArgumentException(sprintf('Excepted a scalar value as a 2nd argument to "%s()", "%s" given.', __METHOD__, get_debug_type($default)));
+            throw new \InvalidArgumentException(sprintf('Excepted a scalar value as a 2nd argument to "%s()", "%s" given.',
+                __METHOD__, get_debug_type($default)));
         }
 
         $value = parent::get($key, $this);
@@ -27,18 +30,18 @@ final class InputBag extends ParameterBag
     /**
      * Replaces the current input values by a new set.
      */
-    public function replace(array $inputs = [])
+    public function replace(array $items = []): void
     {
         $this->parameters = [];
-        $this->add($inputs);
+        $this->add($items);
     }
 
     /**
      * Adds input values.
      */
-    public function add(array $inputs = [])
+    public function add(array $items = []): void
     {
-        foreach ($inputs as $input => $value) {
+        foreach ($items as $input => $value) {
             $this->set($input, $value);
         }
     }
@@ -46,12 +49,13 @@ final class InputBag extends ParameterBag
     /**
      * Sets an input by name.
      *
-     * @param string|int|float|bool|array|null $value
+     * @param  string|int|float|bool|array|null  $value
      */
-    public function set(string $key, mixed $value)
+    public function set(string $key, mixed $value): void
     {
         if (null !== $value && !is_scalar($value) && !\is_array($value) && !$value instanceof \Stringable) {
-            throw new \InvalidArgumentException(sprintf('Excepted a scalar, or an array as a 2nd argument to "%s()", "%s" given.', __METHOD__, get_debug_type($value)));
+            throw new \InvalidArgumentException(sprintf('Исключен скаляр или массив в качестве 2-го аргумента для "%s()", "%s" задан.',
+                __METHOD__, get_debug_type($value)));
         }
 
         $this->parameters[$key] = $value;
@@ -60,21 +64,27 @@ final class InputBag extends ParameterBag
     /**
      * {@inheritdoc}
      */
-    public function filter(string $key, mixed $default = null, int $filter = \FILTER_DEFAULT, mixed $options = []): mixed
-    {
+    public function filter(
+        string $key,
+        mixed $default = null,
+        int $filter = \FILTER_DEFAULT,
+        mixed $options = []
+    ): mixed {
         $value = $this->has($key) ? $this->all()[$key] : $default;
 
-        // Always turn $options into an array - this allows filter_var option shortcuts.
+        // Всегда превращайте $options в массив - это позволяет использовать filter_var option shortcuts.
         if (!\is_array($options) && $options) {
             $options = ['flags' => $options];
         }
 
         if (\is_array($value) && !(($options['flags'] ?? 0) & (\FILTER_REQUIRE_ARRAY | \FILTER_FORCE_ARRAY))) {
-            throw new BadRequestException(sprintf('Input value "%s" contains an array, but "FILTER_REQUIRE_ARRAY" or "FILTER_FORCE_ARRAY" flags were not set.', $key));
+            throw new BadRequestException(sprintf('Входное значение "%s" содержит массив, но флаги "FILTER_REQUIRE_ARRAY" или "FILTER_FORCE_ARRAY" не были установлены.',
+                $key));
         }
 
         if ((\FILTER_CALLBACK & $filter) && !(($options['options'] ?? null) instanceof \Closure)) {
-            throw new \InvalidArgumentException(sprintf('A Closure must be passed to "%s()" when FILTER_CALLBACK is used, "%s" given.', __METHOD__, get_debug_type($options['options'] ?? null)));
+            throw new \InvalidArgumentException(sprintf('Замыкание должно быть передано в "%s()" при использовании FILTER_CALLBACK, задается "%s".',
+                __METHOD__, get_debug_type($options['options'] ?? null)));
         }
 
         return filter_var($value, $filter, $options);

@@ -26,12 +26,7 @@ ini_set('display_errors', DISPLAY_ERRORS);
 error_reporting(ERROR_REPORTING);
 
 $r = \FileManager\Modules\Http\Request::createFromGlobals();
-echo '<pre>';
-var_export($r->getBaseUrlReal());
-echo '</pre>';
-echo '<pre>';
-var_export($r->getBasePath());
-echo '</pre>';
+
 echo '<pre>';
 var_export($r->getBaseUrl());
 echo '</pre>';

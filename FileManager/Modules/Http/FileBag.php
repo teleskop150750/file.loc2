@@ -9,46 +9,38 @@ class FileBag extends ParameterBag
     private const FILE_KEYS = ['error', 'name', 'size', 'tmp_name', 'type'];
 
     /**
-     * @param array|UploadedFile[] $parameters An array of HTTP files
+     * @param array|UploadedFile[] $parameters Массив HTTP-файлов
      */
     public function __construct(array $parameters = [])
     {
+        parent::__construct();
         $this->replace($parameters);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function replace(array $files = [])
+    public function replace(array $items = []): void
     {
         $this->parameters = [];
-        $this->add($files);
+        $this->add($items);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function set(string $key, mixed $value)
+    public function set(string $key, mixed $value): void
     {
         if (!\is_array($value) && !$value instanceof UploadedFile) {
-            throw new \InvalidArgumentException('An uploaded file must be an array or an instance of UploadedFile.');
+            throw new \InvalidArgumentException('Загруженный файл должен быть массивом или экземпляром UploadedFile.');
         }
 
         parent::set($key, $this->convertFileInformation($value));
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function add(array $files = [])
+    public function add(array $items = []): void
     {
-        foreach ($files as $key => $file) {
+        foreach ($items as $key => $file) {
             $this->set($key, $file);
         }
     }
 
     /**
-     * Converts uploaded files to UploadedFile instances.
+     * Преобразует загруженные файлы в экземпляры UploadedFile.
      *
      * @return UploadedFile[]|UploadedFile|null
      */
@@ -79,16 +71,16 @@ class FileBag extends ParameterBag
     }
 
     /**
-     * Fixes a malformed PHP $_FILES array.
+     * Исправлен неправильный массив PHP $_FILES.
      *
-     * PHP has a bug that the format of the $_FILES array differs, depending on
-     * whether the uploaded file fields had normal field names or array-like
-     * field names ("normal" vs. "parent[child]").
+     * В PHP есть ошибка, из-за которой формат массива $_FILES отличается в зависимости от того,
+     * имели ли загруженные поля файла обычные имена полей или похожие на массив
+     * имена полей ("обычные" или "родительские [дочерние]").
+ *
+     * Этот метод исправляет массив, чтобы он выглядел как "обычный" массив $_FILES.
      *
-     * This method fixes the array to look like the "normal" $_FILES array.
-     *
-     * It's safe to pass an already converted array, in which case this method
-     * just returns the original array unmodified.
+     * Безопасно передавать уже преобразованный массив, и в этом случае этот метод
+     * просто возвращает исходный массив без изменений.
      */
     protected function fixPhpFilesArray(array $data): array
     {

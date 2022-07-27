@@ -5,6 +5,7 @@ namespace FileManager\Modules\Http;
 use FileManager\Modules\Http\Exception\SessionNotFoundException;
 use FileManager\Modules\Http\Exception\SuspiciousOperationException;
 use JsonException;
+use Locale;
 
 class Request
 {
@@ -113,13 +114,8 @@ class Request
 
     protected ?string $format;
 
-    protected ?string $locale;
-
-    protected string $defaultLocale = 'en';
-
     protected static array $formats;
 
-    private ?string $preferredFormat = null;
     private bool $isHostValid = true;
     private bool $isForwardedValid = true;
 
@@ -249,29 +245,6 @@ class Request
         $this->headers = clone $this->headers;
     }
 
-    public function __toString(): string
-    {
-        $content = $this->getContent();
-
-        $cookieHeader = '';
-        $cookies = [];
-
-        foreach ($this->cookies as $k => $v) {
-            $cookies[] = $k.'='.$v;
-        }
-
-        if (!empty($cookies)) {
-            $cookieHeader = 'Cookie: '.implode('; ', $cookies)."\r\n";
-        }
-
-        return
-            sprintf('%s %s %s', $this->getMethod(), $this->getRequestUri(),
-                $this->server->get('SERVER_PROTOCOL'))."\r\n".
-            $this->headers.
-            $cookieHeader."\r\n".
-            $content;
-    }
-
     /**
      * Нормализует строку запроса.
      *
@@ -331,27 +304,6 @@ class Request
         }
 
         return $this->pathInfo;
-    }
-
-    /**
-     * Возвращает корневой путь, с которого выполняется этот запрос.
-     *
-     * Предположим, что index.php файл создает экземпляр этого объекта запроса:
-     *
-     * * http://localhost/index.php возвращает пустую строку
-     * * http://localhost/index.php/page возвращает пустую строку
-     * * http://localhost/web/index.php возвращает '/web'
-     * * http://localhost/we%20b/index.php возвращает '/we%20b'
-     *
-     * @return string Необработанного пути (т.е. не urldecoded)
-     */
-    public function getBasePath(): string
-    {
-        if (null === $this->basePath) {
-            $this->basePath = $this->prepareBasePath();
-        }
-
-        return $this->basePath;
     }
 
     /**
@@ -449,6 +401,76 @@ class Request
         return $this->getHost().':'.$port;
     }
 
+    protected function prepareBaseUrl(): string
+    {
+        $filename = basename($this->server->get('SCRIPT_FILENAME', ''));
+
+        if (basename($this->server->get('SCRIPT_NAME', '')) === $filename) {
+            $baseUrl = $this->server->get('SCRIPT_NAME');
+        } elseif (basename($this->server->get('PHP_SELF', '')) === $filename) {
+            $baseUrl = $this->server->get('PHP_SELF');
+        } elseif (basename($this->server->get('ORIG_SCRIPT_NAME', '')) === $filename) {
+            $baseUrl = $this->server->get('ORIG_SCRIPT_NAME'); // 1and1 shared hosting compatibility
+        } else {
+            // Backtrack up the script_filename to find the portion matching
+            // php_self
+            $path = $this->server->get('PHP_SELF', '');
+            $file = $this->server->get('SCRIPT_FILENAME', '');
+            $segs = explode('/', trim($file, '/'));
+            $segs = array_reverse($segs);
+            $index = 0;
+            $last = \count($segs);
+            $baseUrl = '';
+            do {
+                $seg = $segs[$index];
+                $baseUrl = '/'.$seg.$baseUrl;
+                ++$index;
+            } while ($last > $index && (false !== $pos = strpos($path, $baseUrl)) && 0 != $pos);
+        }
+
+        // Does the baseUrl have anything in common with the request_uri?
+        $requestUri = $this->getRequestUri();
+        if ('' !== $requestUri && '/' !== $requestUri[0]) {
+            $requestUri = '/'.$requestUri;
+        }
+
+        if ($baseUrl && null !== $prefix = $this->getUrlencodedPrefix($requestUri, $baseUrl)) {
+            // full $baseUrl matches
+            return $prefix;
+        }
+
+        if ($baseUrl && null !== $prefix = $this->getUrlencodedPrefix($requestUri,
+                rtrim(\dirname($baseUrl), '/'.\DIRECTORY_SEPARATOR).'/')) {
+            // directory portion of $baseUrl matches
+            return rtrim($prefix, '/'.\DIRECTORY_SEPARATOR);
+        }
+
+        $truncatedRequestUri = $requestUri;
+        if (false !== $pos = strpos($requestUri, '?')) {
+            $truncatedRequestUri = substr($requestUri, 0, $pos);
+        }
+
+        $basename = basename($baseUrl ?? '');
+        if (empty($basename) || !strpos(rawurldecode($truncatedRequestUri), $basename)) {
+            // no match whatsoever; set it blank
+            return '';
+        }
+
+        // При использовании mod_rewrite или ISAPI_Rewrite удалите имя файла скрипта
+        // out of baseUrl. $pos !== 0 гарантирует, что он не соответствует значению
+        // из PATH_INFO или QUERY_STRING
+        if
+        (
+            (false !== $pos = strpos($requestUri, $baseUrl))
+            && 0 !== $pos
+            && \strlen($requestUri) >= \strlen($baseUrl)
+        ) {
+            $baseUrl = substr($requestUri, 0, $pos + \strlen($baseUrl));
+        }
+
+        return rtrim($baseUrl, '/'.\DIRECTORY_SEPARATOR);
+    }
+
     /**
      * Возвращает запрошенный URL-адрес (путь и строку запроса).
      *
@@ -486,16 +508,6 @@ class Request
         }
 
         return $this->getSchemeAndHttpHost().$this->getBaseUrl().$this->getPathInfo().$qs;
-    }
-
-    /**
-     * Генерирует нормализованный URI для заданного пути.
-     *
-     * @param  string  $path  Путь для использования вместо текущего
-     */
-    public function getUriForPath(string $path): string
-    {
-        return $this->getSchemeAndHttpHost().$this->getBaseUrl().$path;
     }
 
     /**
@@ -561,6 +573,7 @@ class Request
             if (!$this->isHostValid) {
                 return '';
             }
+
             $this->isHostValid = false;
 
             throw new SuspiciousOperationException(sprintf('Invalid Host "%s".', $host));
@@ -590,15 +603,6 @@ class Request
         }
 
         return $host;
-    }
-
-    /**
-     * Задает метод запроса.
-     */
-    public function setMethod(string $method): void
-    {
-        $this->method = null;
-        $this->server->set('REQUEST_METHOD', $method);
     }
 
     /**
@@ -644,7 +648,7 @@ class Request
         }
 
         if (!preg_match('/^[A-Z]++$/D', $method)) {
-            throw new SuspiciousOperationException(sprintf('Invalid method override "%s".', $method));
+            throw new SuspiciousOperationException(sprintf('Недопустимое переопределение метода "%s".', $method));
         }
 
         return $this->method = $method;
@@ -658,202 +662,6 @@ class Request
     public function getRealMethod(): string
     {
         return strtoupper($this->server->get('REQUEST_METHOD', 'GET'));
-    }
-
-    /**
-     * Возвращает тип mime, связанный с форматом.
-     */
-    public function getMimeType(string $format): ?string
-    {
-        if (null === static::$formats) {
-            static::initializeFormats();
-        }
-
-        return isset(static::$formats[$format]) ? static::$formats[$format][0] : null;
-    }
-
-    /**
-     * Возвращает типы mime, связанные с форматом.
-     */
-    public static function getMimeTypes(string $format): array
-    {
-        if (null === static::$formats) {
-            static::initializeFormats();
-        }
-
-        return static::$formats[$format] ?? [];
-    }
-
-    /**
-     * Возвращает формат, связанный с типом mime.
-     */
-    public function getFormat(?string $mimeType): ?string
-    {
-        $canonicalMimeType = null;
-        if ($mimeType && false !== $pos = strpos($mimeType, ';')) {
-            $canonicalMimeType = trim(substr($mimeType, 0, $pos));
-        }
-
-        if (null === static::$formats) {
-            static::initializeFormats();
-        }
-
-        foreach (static::$formats as $format => $mimeTypes) {
-            if (\in_array($mimeType, (array) $mimeTypes, true)) {
-                return $format;
-            }
-            if (null !== $canonicalMimeType && \in_array($canonicalMimeType, (array) $mimeTypes, true)) {
-                return $format;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Связывает формат с типами mime.
-     *
-     * @param  string|array  $mimeTypes  Связанные типы mime (предпочтительный должен быть первым, поскольку он будет использоваться в качестве типа содержимого)
-     */
-    public function setFormat(?string $format, string|array $mimeTypes)
-    {
-        if (null === static::$formats) {
-            static::initializeFormats();
-        }
-
-        static::$formats[$format] = \is_array($mimeTypes) ? $mimeTypes : [$mimeTypes];
-    }
-
-    /**
-     * Возвращает формат запроса.
-     *
-     * Вот процесс определения формата:
-     *
-     *  * формат, определенный пользователем (с помощью setRequestFormat())
-     *  * атрибут запроса _format
-     *  * $по умолчанию
-     *
-     * @see getPreferredFormat
-     */
-    public function getRequestFormat(?string $default = 'html'): ?string
-    {
-        if (null === $this->format) {
-            $this->format = $this->attributes->get('_format');
-        }
-
-        return $this->format ?? $default;
-    }
-
-    /**
-     * Задает формат запроса.
-     */
-    public function setRequestFormat(?string $format): void
-    {
-        $this->format = $format;
-    }
-
-    /**
-     * Возвращает формат, связанный с запросом.
-     */
-    public function getContentType(): ?string
-    {
-        return $this->getFormat($this->headers->get('CONTENT_TYPE', ''));
-    }
-
-    /**
-     * Устанавливает языковой стандарт по умолчанию.
-     */
-    public function setDefaultLocale(string $locale)
-    {
-        $this->defaultLocale = $locale;
-
-        if (null === $this->locale) {
-            $this->setPhpDefaultLocale($locale);
-        }
-    }
-
-    /**
-     * Получить locale по умолчанию.
-     */
-    public function getDefaultLocale(): string
-    {
-        return $this->defaultLocale;
-    }
-
-    /**
-     * Задает locale.
-     */
-    public function setLocale(string $locale): void
-    {
-        $this->setPhpDefaultLocale($this->locale = $locale);
-    }
-
-    /**
-     * Получить locale.
-     */
-    public function getLocale(): string
-    {
-        return $this->locale ?? $this->defaultLocale;
-    }
-
-    /**
-     * Проверяет, относится ли метод запроса к указанному типу.
-     *
-     * @param  string  $method  Метод запроса в верхнем регистре (GET, POST etc)
-     */
-    public function isMethod(string $method): bool
-    {
-        return $this->getMethod() === strtoupper($method);
-    }
-
-    /**
-     * Проверяет, является ли метод безопасным.
-     *
-     * @see https://tools.ietf.org/html/rfc7231#section-4.2.1
-     */
-    public function isMethodSafe(): bool
-    {
-        return \in_array($this->getMethod(), ['GET', 'HEAD', 'OPTIONS', 'TRACE']);
-    }
-
-    /**
-     * Проверяет, является ли метод идемпотентным или нет.
-     */
-    public function isMethodIdempotent(): bool
-    {
-        return \in_array($this->getMethod(), ['HEAD', 'GET', 'PUT', 'DELETE', 'TRACE', 'OPTIONS', 'PURGE']);
-    }
-
-    /**
-     * Проверяет, является ли метод кэшируемым или нет.
-     *
-     * @see https://tools.ietf.org/html/rfc7231#section-4.2.3
-     */
-    public function isMethodCacheable(): bool
-    {
-        return \in_array($this->getMethod(), ['GET', 'HEAD']);
-    }
-
-    /**
-     * Возвращает версию протокола.
-     *
-     * Если приложение находится за прокси-сервером, версия протокола, используемая в запросах
-     * между клиентом и прокси-сервером и между прокси-сервером и сервером,
-     * может отличаться. Это возвращает первое (из заголовка "Via")
-     * если прокси-сервер является доверенным (см. "setTrustedProxies()"), в противном случае он возвращает
-     * последнее (из параметра сервера "SERVER_PROTOCOL").
-     */
-    public function getProtocolVersion(): ?string
-    {
-        if ($this->isFromTrustedProxy()) {
-            preg_match('~^(HTTP/)?([1-9]\.\d) ~', $this->headers->get('Via') ?? '', $matches);
-
-            if ($matches) {
-                return 'HTTP/'.$matches[2];
-            }
-        }
-
-        return $this->server->get('SERVER_PROTOCOL');
     }
 
     /**
@@ -899,88 +707,6 @@ class Request
         }
 
         return $this->content;
-    }
-
-    /**
-     * Получает тело запроса, декодированное в виде массива, обычно из полезной нагрузки JSON.
-     *
-     * @throws JsonException Когда тело не может быть декодировано в массив
-     */
-    public function toArray(): array
-    {
-        if ('' === $content = $this->getContent()) {
-            throw new JsonException('Тело запроса пустое.');
-        }
-
-        try {
-            $content = json_decode($content, true, 512, \JSON_BIGINT_AS_STRING | \JSON_THROW_ON_ERROR);
-        } catch (\JsonException $e) {
-            throw new JsonException('Не удалось расшифровать тело запроса.', $e->getCode(), $e);
-        }
-
-        if (!\is_array($content)) {
-            throw new JsonException(sprintf('JSON content was expected to decode to an array, "%s" returned.',
-                get_debug_type($content)));
-        }
-
-        return $content;
-    }
-
-    /**
-     * Gets the ETags.
-     */
-    public function getETags(): array
-    {
-        return preg_split('/\s*,\s*/', $this->headers->get('If-None-Match', ''), -1, \PREG_SPLIT_NO_EMPTY);
-    }
-
-    public function isNoCache(): bool
-    {
-        return $this->headers->hasCacheControlDirective('no-cache') || 'no-cache' === $this->headers->get('Pragma');
-    }
-
-    /**
-     * Получает предпочтительный формат ответа путем проверки в следующем порядке:
-     * * формат запроса, заданный с помощью setRequestFormat;
-     * * значения заголовка Accept HTTP.
-     *
-     * Обратите внимание, что если вы используете этот метод, вам следует отправить заголовок "Vary: Accept".
-     * в ответе, чтобы предотвратить любые проблемы с промежуточными HTTP-кэшами.
-     */
-    public function getPreferredFormat(?string $default = 'html'): ?string
-    {
-        if (null !== $this->preferredFormat || null !== $this->preferredFormat = $this->getRequestFormat(null)) {
-            return $this->preferredFormat;
-        }
-
-        foreach ($this->getAcceptableContentTypes() as $mimeType) {
-            if ($this->preferredFormat = $this->getFormat($mimeType)) {
-                return $this->preferredFormat;
-            }
-        }
-
-        return $default;
-    }
-
-    /**
-     * Получает список типов контента, приемлемых для клиентского браузера, в предпочтительном порядке.
-     */
-    public function getAcceptableContentTypes(): array
-    {
-        return $this->acceptableContentTypes ?? ($this->acceptableContentTypes = array_keys(AcceptHeader::fromString($this->headers->get('Accept'))->all()));
-    }
-
-    /**
-     * Возвращает значение true, если запрос является XMLHttpRequest.
-     *
-     * Это работает, если ваша библиотека JavaScript устанавливает HTTP-заголовок X-Requested-With.
-     * Известно, что он работает с распространенными фреймворками JavaScript:
-     *
-     * @see https://wikipedia.org/wiki/List_of_Ajax_frameworks#JavaScript
-     */
-    public function isXmlHttpRequest(): bool
-    {
-        return 'XMLHttpRequest' == $this->headers->get('X-Requested-With');
     }
 
 
@@ -1030,102 +756,6 @@ class Request
     }
 
     /**
-     * Подготавливает базовый URL-адрес.
-     */
-    protected function prepareBaseUrl(): string
-    {
-        $filename = basename($this->server->get('SCRIPT_FILENAME', ''));
-
-        if (basename($this->server->get('SCRIPT_NAME', '')) === $filename) {
-            $baseUrl = $this->server->get('SCRIPT_NAME');
-        } elseif (basename($this->server->get('PHP_SELF', '')) === $filename) {
-            $baseUrl = $this->server->get('PHP_SELF');
-        } elseif (basename($this->server->get('ORIG_SCRIPT_NAME', '')) === $filename) {
-            $baseUrl = $this->server->get('ORIG_SCRIPT_NAME'); // 1and1 shared hosting compatibility
-        } else {
-            // Выполните обратный поиск по имени файла script_filename, чтобы найти соответствующую часть
-            // php_self
-            $path = $this->server->get('PHP_SELF', '');
-            $file = $this->server->get('SCRIPT_FILENAME', '');
-            $segs = explode('/', trim($file, '/'));
-            $segs = array_reverse($segs);
-            $index = 0;
-            $last = \count($segs);
-            $baseUrl = '';
-            do {
-                $seg = $segs[$index];
-                $baseUrl = '/'.$seg.$baseUrl;
-                ++$index;
-            } while ($last > $index && (false !== $pos = strpos($path, $baseUrl)) && 0 != $pos);
-        }
-
-        // Имеет ли baseUrl что-нибудь общее с request_uri?
-        $requestUri = $this->getRequestUri();
-        if ('' !== $requestUri && '/' !== $requestUri[0]) {
-            $requestUri = '/'.$requestUri;
-        }
-
-        if ($baseUrl && null !== $prefix = $this->getUrlencodedPrefix($requestUri, $baseUrl)) {
-            // полные совпадения $baseUrl
-            return $prefix;
-        }
-
-        if ($baseUrl && null !== $prefix = $this->getUrlencodedPrefix($requestUri,
-                rtrim(\dirname($baseUrl), '/'.\DIRECTORY_SEPARATOR).'/')) {
-            // часть каталога $baseUrl соответствует
-            return rtrim($prefix, '/'.\DIRECTORY_SEPARATOR);
-        }
-
-        $truncatedRequestUri = $requestUri;
-        if (false !== $pos = strpos($requestUri, '?')) {
-            $truncatedRequestUri = substr($requestUri, 0, $pos);
-        }
-
-        $basename = basename($baseUrl ?? '');
-        if (empty($basename) || !strpos(rawurldecode($truncatedRequestUri), $basename)) {
-            // никакого совпадения; установите его пустым
-            return '';
-        }
-
-        // При использовании mod_rewrite или ISAPI_Rewrite удалите имя файла скрипта
-        // out of baseUrl. $pos !== 0 гарантирует, что он не соответствует значению
-        // из PATH_INFO или QUERY_STRING
-        if (
-            (false !== $pos = strpos($requestUri, $baseUrl))
-            && 0 !== $pos
-            && \strlen($requestUri) >= \strlen($baseUrl)
-        ) {
-            $baseUrl = substr($requestUri, 0, $pos + \strlen($baseUrl));
-        }
-
-        return rtrim($baseUrl, '/'.\DIRECTORY_SEPARATOR);
-    }
-
-    /**
-     * Подготавливает базовый путь.
-     */
-    protected function prepareBasePath(): string
-    {
-        $baseUrl = $this->getBaseUrl();
-        if (empty($baseUrl)) {
-            return '';
-        }
-
-        $filename = basename($this->server->get('SCRIPT_FILENAME'));
-        if (basename($baseUrl) === $filename) {
-            $basePath = \dirname($baseUrl);
-        } else {
-            $basePath = $baseUrl;
-        }
-
-        if ('\\' === \DIRECTORY_SEPARATOR) {
-            $basePath = str_replace('\\', '/', $basePath);
-        }
-
-        return rtrim($basePath, '/');
-    }
-
-    /**
      * Подготавливает информацию о пути.
      */
     protected function preparePathInfo(): string
@@ -1157,39 +787,6 @@ class Request
     }
 
     /**
-     * Инициализирует форматы HTTP-запросов.
-     */
-    protected static function initializeFormats(): void
-    {
-        static::$formats = [
-            'html' => ['text/html', 'application/xhtml+xml'],
-            'txt' => ['text/plain'],
-            'js' => ['application/javascript', 'application/x-javascript', 'text/javascript'],
-            'css' => ['text/css'],
-            'json' => ['application/json', 'application/x-json'],
-            'jsonld' => ['application/ld+json'],
-            'xml' => ['text/xml', 'application/xml', 'application/x-xml'],
-            'rdf' => ['application/rdf+xml'],
-            'atom' => ['application/atom+xml'],
-            'rss' => ['application/rss+xml'],
-            'form' => ['application/x-www-form-urlencoded', 'multipart/form-data'],
-        ];
-    }
-
-    private function setPhpDefaultLocale(string $locale): void
-    {
-        // если либо языковой стандарт класса не существует, либо генерируется исключение, когда
-        // установка языкового стандарта по умолчанию, модуль intl не установлен, и
-        // вызов может быть проигнорирован:
-        try {
-            if (class_exists(\Locale::class, false)) {
-                \Locale::setDefault($locale);
-            }
-        } catch (\Exception) {
-        }
-    }
-
-    /**
      * Возвращает префикс, закодированный в строке, если строка начинается с заданного префикса,
      * в противном случае null.
      */
@@ -1207,7 +804,6 @@ class Request
 
         return null;
     }
-
 
     /**
      * Указывает, исходил ли этот запрос от доверенного прокси-сервера.

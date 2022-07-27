@@ -2,6 +2,8 @@
 
 namespace FileManager\Modules\Http;
 
+use ArrayIterator;
+
 class HeaderBag implements \IteratorAggregate, \Countable
 {
     protected const UPPER = '_ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -21,7 +23,7 @@ class HeaderBag implements \IteratorAggregate, \Countable
     }
 
     /**
-     * Returns the headers as a string.
+     * Возвращает заголовки в виде строки.
      */
     public function __toString(): string
     {
@@ -43,9 +45,9 @@ class HeaderBag implements \IteratorAggregate, \Countable
     }
 
     /**
-     * Returns the headers.
+     * Возвращает заголовки.
      *
-     * @param string|null $key The name of the headers to return or null to get them all
+     * @param  string|null  $key  Имя возвращаемых заголовков или null, чтобы получить их все
      *
      * @return array<string, array<int, string|null>>|array<int, string|null>
      */
@@ -59,7 +61,7 @@ class HeaderBag implements \IteratorAggregate, \Countable
     }
 
     /**
-     * Returns the parameter keys.
+     * Возвращает ключи параметров.
      *
      * @return string[]
      */
@@ -69,18 +71,18 @@ class HeaderBag implements \IteratorAggregate, \Countable
     }
 
     /**
-     * Replaces the current HTTP headers by a new set.
+     * Заменяет текущие HTTP-заголовки новым набором.
      */
-    public function replace(array $headers = [])
+    public function replace(array $headers = []): void
     {
         $this->headers = [];
         $this->add($headers);
     }
 
     /**
-     * Adds new headers the current HTTP headers set.
+     * Добавляет новые заголовки к текущему набору HTTP заголовков.
      */
-    public function add(array $headers)
+    public function add(array $headers): void
     {
         foreach ($headers as $key => $values) {
             $this->set($key, $values);
@@ -88,7 +90,7 @@ class HeaderBag implements \IteratorAggregate, \Countable
     }
 
     /**
-     * Returns the first header by name or the default one.
+     * Возвращает первый заголовок по имени или заголовок по умолчанию.
      */
     public function get(string $key, string $default = null): ?string
     {
@@ -106,10 +108,10 @@ class HeaderBag implements \IteratorAggregate, \Countable
     }
 
     /**
-     * Sets a header by name.
+     * Задает заголовок по имени.
      *
-     * @param string|string[]|null $values  The value or an array of values
-     * @param bool                 $replace Whether to replace the actual value or not (true by default)
+     * @param  string|string[]|null  $values   Значение или массив значений
+     * @param  bool                  $replace  Следует ли заменять фактическое значение или нет (по умолчанию true)
      */
     public function set(string $key, string|array|null $values, bool $replace = true)
     {
@@ -136,26 +138,18 @@ class HeaderBag implements \IteratorAggregate, \Countable
         }
     }
 
-    /**
-     * Returns true if the HTTP header is defined.
-     */
     public function has(string $key): bool
     {
         return \array_key_exists(strtr($key, self::UPPER, self::LOWER), $this->all());
     }
 
-    /**
-     * Returns true if the given HTTP header contains the given value.
-     */
     public function contains(string $key, string $value): bool
     {
-        return \in_array($value, $this->all($key));
+        return \in_array($value, $this->all($key), true);
     }
 
-    /**
-     * Removes a header.
-     */
-    public function remove(string $key)
+
+    public function remove(string $key): void
     {
         $key = strtr($key, self::UPPER, self::LOWER);
 
@@ -167,9 +161,9 @@ class HeaderBag implements \IteratorAggregate, \Countable
     }
 
     /**
-     * Returns the HTTP header value converted to a date.
+     * Возвращает значение заголовка HTTP, преобразованное в дату.
      *
-     * @throws \RuntimeException When the HTTP header is not parseable
+     * @throws \RuntimeException Когда HTTP-заголовок не поддается синтаксическому анализу
      */
     public function getDate(string $key, \DateTime $default = null): ?\DateTimeInterface
     {
@@ -178,33 +172,25 @@ class HeaderBag implements \IteratorAggregate, \Countable
         }
 
         if (false === $date = \DateTime::createFromFormat(\DATE_RFC2822, $value)) {
-            throw new \RuntimeException(sprintf('The "%s" HTTP header is not parseable (%s).', $key, $value));
+            throw new \RuntimeException(sprintf('HTTP-заголовок "%s" не поддается синтаксическому анализу (%s).', $key,
+                $value));
         }
 
         return $date;
     }
 
-    /**
-     * Adds a custom Cache-Control directive.
-     */
-    public function addCacheControlDirective(string $key, bool|string $value = true)
+    public function addCacheControlDirective(string $key, bool|string $value = true): void
     {
         $this->cacheControl[$key] = $value;
 
         $this->set('Cache-Control', $this->getCacheControlHeader());
     }
 
-    /**
-     * Returns true if the Cache-Control directive is defined.
-     */
     public function hasCacheControlDirective(string $key): bool
     {
         return \array_key_exists($key, $this->cacheControl);
     }
 
-    /**
-     * Returns a Cache-Control directive value by name.
-     */
     public function getCacheControlDirective(string $key): bool|string|null
     {
         return $this->cacheControl[$key] ?? null;
@@ -213,7 +199,7 @@ class HeaderBag implements \IteratorAggregate, \Countable
     /**
      * Removes a Cache-Control directive.
      */
-    public function removeCacheControlDirective(string $key)
+    public function removeCacheControlDirective(string $key): void
     {
         unset($this->cacheControl[$key]);
 
@@ -223,22 +209,19 @@ class HeaderBag implements \IteratorAggregate, \Countable
     /**
      * Returns an iterator for headers.
      *
-     * @return \ArrayIterator<string, list<string|null>>
+     * @return ArrayIterator<string, list<string|null>>
      */
-    public function getIterator(): \ArrayIterator
+    public function getIterator(): ArrayIterator
     {
-        return new \ArrayIterator($this->headers);
+        return new ArrayIterator($this->headers);
     }
 
-    /**
-     * Returns the number of headers.
-     */
     public function count(): int
     {
         return \count($this->headers);
     }
 
-    protected function getCacheControlHeader()
+    protected function getCacheControlHeader(): string
     {
         ksort($this->cacheControl);
 

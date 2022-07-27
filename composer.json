@@ -24,7 +24,8 @@
         "ext-json": "*",
         "voku/portable-ascii": "^2.0",
         "ext-fileinfo": "*",
-        "ext-iconv": "*"
+        "ext-iconv": "*",
+        "ext-intl": "*"
     }
     ,
     "require-dev": {

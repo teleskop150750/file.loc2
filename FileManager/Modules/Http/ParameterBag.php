@@ -2,14 +2,19 @@
 
 namespace FileManager\Modules\Http;
 
+use ArrayIterator;
+use Countable;
 use FileManager\Modules\Http\Exception\BadRequestException;
+use InvalidArgumentException;
+use IteratorAggregate;
+use function count;
 
-class ParameterBag implements \IteratorAggregate, \Countable
+class ParameterBag implements IteratorAggregate, Countable
 {
     /**
-     * Parameter storage.
+     * Хранение параметров.
      */
-    protected $parameters;
+    protected array $parameters;
 
     public function __construct(array $parameters = [])
     {
@@ -17,9 +22,9 @@ class ParameterBag implements \IteratorAggregate, \Countable
     }
 
     /**
-     * Returns the parameters.
+     * Возвращает параметры.
      *
-     * @param string|null $key The name of the parameter to return or null to get them all
+     * @param string|null $key Имя возвращаемого параметра или null, чтобы получить их все
      */
     public function all(string $key = null): array
     {
@@ -28,34 +33,28 @@ class ParameterBag implements \IteratorAggregate, \Countable
         }
 
         if (!\is_array($value = $this->parameters[$key] ?? [])) {
-            throw new BadRequestException(sprintf('Unexpected value for parameter "%s": expecting "array", got "%s".', $key, get_debug_type($value)));
+            throw new BadRequestException(sprintf('Неожиданное значение для параметра "%s": ожидая "array", получил "%s".', $key, get_debug_type($value)));
         }
 
         return $value;
     }
 
     /**
-     * Returns the parameter keys.
+     * Возвращает ключи параметров.
      */
     public function keys(): array
     {
         return array_keys($this->parameters);
     }
 
-    /**
-     * Replaces the current parameters by a new set.
-     */
-    public function replace(array $parameters = [])
+    public function replace(array $items = []): void
     {
-        $this->parameters = $parameters;
+        $this->parameters = $items;
     }
 
-    /**
-     * Adds parameters.
-     */
-    public function add(array $parameters = [])
+    public function add(array $items = []): void
     {
-        $this->parameters = array_replace($this->parameters, $parameters);
+        $this->parameters = array_replace($this->parameters, $items);
     }
 
     public function get(string $key, mixed $default = null): mixed
@@ -63,63 +62,42 @@ class ParameterBag implements \IteratorAggregate, \Countable
         return \array_key_exists($key, $this->parameters) ? $this->parameters[$key] : $default;
     }
 
-    public function set(string $key, mixed $value)
+    public function set(string $key, mixed $value): void
     {
         $this->parameters[$key] = $value;
     }
 
-    /**
-     * Returns true if the parameter is defined.
-     */
     public function has(string $key): bool
     {
         return \array_key_exists($key, $this->parameters);
     }
 
-    /**
-     * Removes a parameter.
-     */
     public function remove(string $key)
     {
         unset($this->parameters[$key]);
     }
 
-    /**
-     * Returns the alphabetic characters of the parameter value.
-     */
     public function getAlpha(string $key, string $default = ''): string
     {
         return preg_replace('/[^[:alpha:]]/', '', $this->get($key, $default));
     }
 
-    /**
-     * Returns the alphabetic characters and digits of the parameter value.
-     */
     public function getAlnum(string $key, string $default = ''): string
     {
         return preg_replace('/[^[:alnum:]]/', '', $this->get($key, $default));
     }
 
-    /**
-     * Returns the digits of the parameter value.
-     */
     public function getDigits(string $key, string $default = ''): string
     {
         // we need to remove - and + because they're allowed in the filter
         return str_replace(['-', '+'], '', $this->filter($key, $default, \FILTER_SANITIZE_NUMBER_INT));
     }
 
-    /**
-     * Returns the parameter value converted to integer.
-     */
     public function getInt(string $key, int $default = 0): int
     {
         return (int) $this->get($key, $default);
     }
 
-    /**
-     * Returns the parameter value converted to boolean.
-     */
     public function getBoolean(string $key, bool $default = false): bool
     {
         return $this->filter($key, $default, \FILTER_VALIDATE_BOOLEAN);
@@ -129,14 +107,12 @@ class ParameterBag implements \IteratorAggregate, \Countable
      * Filter key.
      *
      * @param int $filter FILTER_* constant
-     *
-     * @see https://php.net/filter-var
      */
     public function filter(string $key, mixed $default = null, int $filter = \FILTER_DEFAULT, mixed $options = []): mixed
     {
         $value = $this->get($key, $default);
 
-        // Always turn $options into an array - this allows filter_var option shortcuts.
+        // Всегда превращайте $options в массив - это позволяет использовать ярлыки опций filter_var.
         if (!\is_array($options) && $options) {
             $options = ['flags' => $options];
         }
@@ -147,27 +123,27 @@ class ParameterBag implements \IteratorAggregate, \Countable
         }
 
         if ((\FILTER_CALLBACK & $filter) && !(($options['options'] ?? null) instanceof \Closure)) {
-            throw new \InvalidArgumentException(sprintf('A Closure must be passed to "%s()" when FILTER_CALLBACK is used, "%s" given.', __METHOD__, get_debug_type($options['options'] ?? null)));
+            throw new InvalidArgumentException(sprintf('Замыкание должно быть передано в "%s()" при использовании FILTER_CALLBACK, получено "%s".', __METHOD__, get_debug_type($options['options'] ?? null)));
         }
 
         return filter_var($value, $filter, $options);
     }
 
     /**
-     * Returns an iterator for parameters.
+     * Возвращает итератор для параметров.
      *
-     * @return \ArrayIterator<string, mixed>
+     * @return ArrayIterator<string, mixed>
      */
-    public function getIterator(): \ArrayIterator
+    public function getIterator(): ArrayIterator
     {
-        return new \ArrayIterator($this->parameters);
+        return new ArrayIterator($this->parameters);
     }
 
     /**
-     * Returns the number of parameters.
+     * Возвращает количество параметров.
      */
     public function count(): int
     {
-        return \count($this->parameters);
+        return count($this->parameters);
     }
 }
