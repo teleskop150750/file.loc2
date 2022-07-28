@@ -140,7 +140,7 @@ class FileManagerService
             $fileUrl = $this->getFileUrl($filePath);
             $fileHash = $this->getFileHash($this->uploadedFile['tmp_name']);
 
-            if (!$this->existFileHash($fileHash)) {
+            if (!$this->existFileByHash($fileHash)) {
                 $this->storeInFileSystem($folder, $this->uploadedFile['tmp_name'], $fileHashName);
             }
 
@@ -693,7 +693,7 @@ class FileManagerService
      *
      * @return bool
      */
-    private function existFileHash(string $hash): bool
+    private function existFileByHash(string $hash): bool
     {
         self::dbQuery("SELECT id FROM files WHERE hash = :hash");
         self::stmtBind(':hash', $hash);
