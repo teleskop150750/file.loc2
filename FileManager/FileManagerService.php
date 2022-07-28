@@ -904,7 +904,7 @@ class FileManagerService
     // String
 
     /**
-     * Сгенерировать надомную строку
+     * Сгенерировать случайную строку
      *
      * @param  int  $length
      *
