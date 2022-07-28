@@ -136,7 +136,7 @@ class FileManagerService
             $fileId = $this->makeFileId();
             $fileHashName = $this->getFileHashName($this->uploadedFile['name']);
             $folder = date('Y-m-d');
-            $filePath = $folder . '/' . $fileHashName;
+            $filePath = $folder.'/'.$fileHashName;
             $fileUrl = $this->getFileUrl($filePath);
             $fileHash = $this->getFileHash($this->uploadedFile['tmp_name']);
 
@@ -185,7 +185,7 @@ class FileManagerService
     {
         try {
             $file = $this->find($id);
-            $path = self::getStorePath() . trim($file['path'], '/');
+            $path = self::getStorePath().trim($file['path'], '/');
             $this->downloadedFile = new SplFileInfo($path);
 
             if (!is_readable($path)) {
@@ -261,7 +261,7 @@ class FileManagerService
      */
     public static function getFullPath(string $path): string
     {
-        return self::getStorePath() . trim($path, '/');
+        return self::getStorePath().trim($path, '/');
     }
 
     /**
@@ -275,7 +275,7 @@ class FileManagerService
         foreach ($this->responseHeaders as $name => $values) {
             $replace = 0 === strcasecmp($name, 'Content-Type');
             foreach ($values as $value) {
-                header($name . ': ' . $value, $replace, $this->statusCode);
+                header($name.': '.$value, $replace, $this->statusCode);
             }
         }
 
@@ -369,7 +369,7 @@ class FileManagerService
 
         if ($mimeType && 0 === (\strlen($mimeType) % 2)) {
             $mimeStart = substr($mimeType, 0, \strlen($mimeType) >> 1);
-            $mimeType = $mimeStart . $mimeStart === $mimeType ? $mimeStart : $mimeType;
+            $mimeType = $mimeStart.$mimeStart === $mimeType ? $mimeStart : $mimeType;
         }
 
         return $mimeType ?: null;
@@ -447,10 +447,10 @@ class FileManagerService
         $hash = strtolower($hash);
 
         if ($extension = $this->getFileExtension($path)) {
-            $extension = '.' . $extension;
+            $extension = '.'.$extension;
         }
 
-        return $hash . $extension;
+        return $hash.$extension;
     }
 
     /**
@@ -476,7 +476,7 @@ class FileManagerService
      */
     private function storeInFileSystem(string $path, mixed $file, string $name): void
     {
-        $path = self::getStorePath() . trim($path . '/' . $name, ' /');
+        $path = self::getStorePath().trim($path.'/'.$name, ' /');
         $this->checkAndCreateDir($path);
 
         if (file_exists($path)) {
@@ -500,7 +500,7 @@ class FileManagerService
     #[NoReturn]
     private function deleteFromFileSystem(string $path): bool
     {
-        $path = self::getStorePath() . trim($path, ' /');
+        $path = self::getStorePath().trim($path, ' /');
         if (@unlink($path)) {
             clearstatcache(false, $path);
 
@@ -567,7 +567,7 @@ class FileManagerService
     {
         $pathInfo = pathinfo($path);
 
-        return $pathInfo['dirname'] . DIRECTORY_SEPARATOR;
+        return $pathInfo['dirname'].DIRECTORY_SEPARATOR;
     }
 
     /**
@@ -595,7 +595,7 @@ class FileManagerService
      */
     private function getFileUrl(string $path): string
     {
-        return self::STORAGE_PATH . $path;
+        return self::STORAGE_PATH.$path;
     }
 
     /**
@@ -605,7 +605,7 @@ class FileManagerService
      */
     private static function getStorePath(): string
     {
-        return $_SERVER['DOCUMENT_ROOT'] . self::STORAGE_PATH;
+        return $_SERVER['DOCUMENT_ROOT'].self::STORAGE_PATH;
     }
 
     // File Db
@@ -782,7 +782,7 @@ class FileManagerService
      */
     private static function makeDb(): void
     {
-        $dsn = self::$dbType . ':host=' . self::$dbHost . ';port=' . self::$dbPort . ';dbname=' . self::$dbName;
+        $dsn = self::$dbType.':host='.self::$dbHost.';port='.self::$dbPort.';dbname='.self::$dbName;
         $options = [
             PDO::ATTR_EMULATE_PREPARES => false,
             PDO::ATTR_PERSISTENT => true,
@@ -793,7 +793,7 @@ class FileManagerService
             self::$db = new PDO($dsn, self::$dbUser, self::$dbPass, $options);
             self::$db->exec("set names utf8mb4");
         } catch (PDOException $exception) {
-            echo 'PDO Error: ' . $exception->getMessage();
+            echo 'PDO Error: '.$exception->getMessage();
         }
     }
 
@@ -809,7 +809,7 @@ class FileManagerService
         try {
             self::$dbStmt = self::db()->prepare($sql);
         } catch (PDOException $exception) {
-            echo 'PDO Error: ' . $exception->getMessage();
+            echo 'PDO Error: '.$exception->getMessage();
         }
     }
 
@@ -833,20 +833,20 @@ class FileManagerService
                 self::stmtBindValue($type, $value, $param);
             }
         } catch (PDOException $exception) {
-            echo 'PDO Error: ' . $exception->getMessage();
+            echo 'PDO Error: '.$exception->getMessage();
         }
     }
 
     /**
      * Привязать значение
      *
-     * @param                $type
+     * @param  mixed         $type
      * @param  mixed         $value
      * @param  array|string  $param
      *
      * @return void
      */
-    private static function stmtBindValue($type, mixed $value, array|string $param): void
+    private static function stmtBindValue(mixed $type, mixed $value, array|string $param): void
     {
         if (is_null($type)) {
             $type = match (true) {
@@ -870,7 +870,7 @@ class FileManagerService
         try {
             return self::dbStmt()->execute();
         } catch (PDOException $exception) {
-            echo 'PDO Error: ' . $exception->getMessage();
+            echo 'PDO Error: '.$exception->getMessage();
 
             return false;
         }
@@ -886,7 +886,7 @@ class FileManagerService
         try {
             self::dbStmt()->execute();
         } catch (PDOException $exception) {
-            echo 'PDO Error: ' . $exception->getMessage();
+            echo 'PDO Error: '.$exception->getMessage();
         }
 
         return self::dbStmt()->fetch(PDO::FETCH_ASSOC);
@@ -902,7 +902,7 @@ class FileManagerService
         try {
             self::dbStmt()->execute();
         } catch (PDOException $exception) {
-            echo 'PDO Error: ' . $exception->getMessage();
+            echo 'PDO Error: '.$exception->getMessage();
         }
 
         return self::dbStmt()->fetchAll(PDO::FETCH_ASSOC);
@@ -927,7 +927,7 @@ class FileManagerService
             try {
                 $bytes = random_bytes($size);
             } catch (Exception $exception) {
-                echo 'random_bytes: ' . $exception->getMessage();
+                echo 'random_bytes: '.$exception->getMessage();
             }
 
             $string .= substr(str_replace(['/', '+', '=', ' '], '', base64_encode($bytes)), 0, $size);
