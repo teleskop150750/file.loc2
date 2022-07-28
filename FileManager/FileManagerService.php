@@ -96,7 +96,6 @@ class FileManagerService
      *
      * @return callable Отправить Response
      */
-    #[NoReturn]
     public function execute(): callable
     {
         if (isset($_FILES[self::FILE_FIELD_NAME])) {
@@ -105,6 +104,12 @@ class FileManagerService
             $this->download($_GET[self::DOWNLOAD_GET_PARAMETER]);
         } elseif (isset($_GET[self::DELETE_GET_PARAMETER])) {
             $this->delete($_GET[self::DELETE_GET_PARAMETER]);
+        } else {
+            $this->setHeaders('Content-Type', 'application/json');
+            $this->setContentToJson([
+                'status' => 'error',
+                'message' => 'Неподдерживаемый метод',
+            ]);
         }
 
         return [$this, 'send'];
@@ -180,9 +185,7 @@ class FileManagerService
     {
         try {
             $file = $this->find($id);
-            $path = $file['path'];
-            $name = $file['origin_name'];
-            $path = self::getStorePath() . trim($path, '/');
+            $path = self::getStorePath() . trim($file['path'], '/');
             $this->downloadedFile = new SplFileInfo($path);
 
             if (!is_readable($path)) {
@@ -191,7 +194,7 @@ class FileManagerService
 
             $this->setHeaders('Content-Type', $this->getMimeType($path) ?: 'text/plain');
             $this->setHeaders('Content-Description', "File Transfer");
-            $this->setHeaders('Content-Disposition', "attachment; filename=$name");
+            $this->setHeaders('Content-Disposition', "attachment; filename={$file['origin_name']}");
         } catch (Exception $exception) {
             $this->setHeaders('Content-Type', 'application/json');
             $this->setContentToJson([
