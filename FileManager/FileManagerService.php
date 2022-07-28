@@ -927,7 +927,7 @@ class FileManagerService
             try {
                 $bytes = random_bytes($size);
             } catch (Exception $exception) {
-                echo 'PDO Error: ' . $exception->getMessage();
+                echo 'random_bytes: ' . $exception->getMessage();
             }
 
             $string .= substr(str_replace(['/', '+', '=', ' '], '', base64_encode($bytes)), 0, $size);
