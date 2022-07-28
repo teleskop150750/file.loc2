@@ -140,11 +140,9 @@ class FileManagerService
             $fileUrl = $this->getFileUrl($filePath);
             $fileHash = $this->getFileHash($this->uploadedFile['tmp_name']);
 
-            if (!$this->existFileByHash($fileHash)) {
+            if (!$foundFile = $this->findByHash($fileHash)) {
                 $this->storeInFileSystem($folder, $this->uploadedFile['tmp_name'], $fileHashName);
-            }
-
-            if ($foundFile = $this->findByHash($fileHash)) {
+            } else {
                 $fileHashName = $foundFile['name'];
                 $fileUrl = $foundFile['url'];
                 $filePath = $foundFile['path'];
