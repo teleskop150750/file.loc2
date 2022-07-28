@@ -249,7 +249,7 @@ class FileManagerService
     {
         $this->sendHeaders();
 
-        if ($this->downloadedFile === null) {
+        if (is_null($this->downloadedFile)) {
             $this->sendTextContent();
         } else {
             $this->sendFileContent();
@@ -747,7 +747,7 @@ class FileManagerService
      */
     private static function db(): PDO
     {
-        if (self::$db === null) {
+        if (is_null(self::$db)) {
             self::makeDb();
         }
 
@@ -761,7 +761,7 @@ class FileManagerService
      */
     private static function dbStmt(): PDOStatement
     {
-        if (self::$dbStmt === null) {
+        if (is_null(self::$dbStmt)) {
             throw new RuntimeException('PDOStatement не инициализирован');
         }
 
