@@ -79,7 +79,7 @@ class FileManagerService
      */
     private array $uploadedFile;
 
-    private const STORAGE_PATH = '/public/storage/';
+    public const STORAGE_PATH = '/public/storage/';
 
     // DB
     private static ?PDO $db = null;
@@ -124,7 +124,7 @@ class FileManagerService
      *
      * @return void
      */
-    public function upload(array $file): void
+    private function upload(array $file): void
     {
         $this->setHeaders('Content-Type', 'application/json');
 
@@ -183,7 +183,7 @@ class FileManagerService
      *
      * @return void
      */
-    public function download(string $id): void
+    private function download(string $id): void
     {
         try {
             $file = $this->find($id);
@@ -211,7 +211,7 @@ class FileManagerService
         }
     }
 
-    public function delete(string $id): void
+    private function delete(string $id): void
     {
         $this->setHeaders('Content-Type', 'application/json');
 
