@@ -685,21 +685,6 @@ class FileManagerService
     }
 
     /**
-     * Проверить, существует ли файл с таким же хешем
-     *
-     * @param  string  $hash
-     *
-     * @return bool
-     */
-    private function existFileByHash(string $hash): bool
-    {
-        self::dbQuery("SELECT id FROM files WHERE hash = :hash");
-        self::stmtBind(':hash', $hash);
-
-        return (bool) self::stmtFetch();
-    }
-
-    /**
      * Получить количество одинаковых файлов в БД
      *
      * @param  string  $hash
