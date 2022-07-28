@@ -105,6 +105,8 @@ class FileManagerService
         } elseif (isset($_GET[self::DELETE_GET_PARAMETER])) {
             $this->delete($_GET[self::DELETE_GET_PARAMETER]);
         } else {
+            $this->statusCode = 400;
+            $this->statusText = 'Bad Request';
             $this->setHeaders('Content-Type', 'application/json');
             $this->setContentToJson([
                 'status' => 'error',
@@ -165,6 +167,8 @@ class FileManagerService
                 ],
             ]);
         } catch (Exception $exception) {
+            $this->statusCode = 400;
+            $this->statusText = 'Bad Request';
             $this->setContentToJson([
                 'status' => 'error',
                 'message' => $exception->getMessage(),
@@ -190,10 +194,14 @@ class FileManagerService
                 throw new RuntimeException('Файл должен быть читаемым.');
             }
 
+            $this->statusCode = 201;
+            $this->statusText = 'Created';
             $this->setHeaders('Content-Type', $this->getMimeType($path) ?: 'text/plain');
             $this->setHeaders('Content-Description', "File Transfer");
             $this->setHeaders('Content-Disposition', "attachment; filename={$file['origin_name']}");
         } catch (Exception $exception) {
+            $this->statusCode = 400;
+            $this->statusText = 'Bad Request';
             $this->setHeaders('Content-Type', 'application/json');
             $this->setContentToJson([
                 'status' => 'error',
@@ -221,6 +229,8 @@ class FileManagerService
                 ],
             ]);
         } else {
+            $this->statusCode = 404;
+            $this->statusText = 'NOT FOUND';
             $this->setContentToJson([
                 'status' => 'error',
                 'message' => "Неверный id: $id",
