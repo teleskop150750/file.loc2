@@ -2,9 +2,7 @@
 
 namespace FileManager\Repositories;
 
-use App\Helper;
 use FileManager\DB\DB;
-use FileManager\Entity\FileEntity;
 use FileManager\Entity\UserEntity;
 
 class UserRepository extends Repository
