@@ -12,16 +12,8 @@ use FileManager\Http\JsonResponse;
 use FileManager\Http\Request;
 use FileManager\Http\Response;
 use FileManager\Repositories\FileRepository;
-use FileManager\Utils\Str;
-use finfo;
-use InvalidArgumentException;
-use JetBrains\PhpStorm\NoReturn;
+use FileManager\Utils\Str;;
 use Exception;
-use PDO;
-use PDOException;
-use PDOStatement;
-use RuntimeException;
-use SplFileInfo;
 
 class FileManagerService
 {
