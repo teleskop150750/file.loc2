@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Helper;
 use App\View;
 use FileManager\FileManagerService;
+use FileManager\Http\Request;
 use FileManager\Repositories\FileRepository;
 use FileManager\Settings;
 use JetBrains\PhpStorm\NoReturn;

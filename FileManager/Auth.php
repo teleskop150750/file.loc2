@@ -2,25 +2,45 @@
 
 namespace FileManager;
 
+use App\Helper;
 use FileManager\Entity\UserEntity;
+use FileManager\Hashing\Hasher;
+use FileManager\Http\Request;
+use FileManager\Repositories\UserRepository;
 
 class Auth
 {
+    public static ?UserEntity $user = null;
+
     public static function check(): bool
     {
-        return true;
+        if (!$user = self::getUser()) {
+            return false;
+        }
+
+        $request = Request::createFromGlobals();
+
+        return Hasher::check($request->input('password'), $user->getPassword());
     }
 
     public static function id(): ?int
     {
-        return 1;
+        return self::getUser()?->getId();
     }
 
-    public static function user(): ?UserEntity
+    public static function getUser(): ?UserEntity
     {
-        $user = new UserEntity();
-        $user->setId(1);
+        if(is_null(self::$user)) {
+            $request = Request::createFromGlobals();
 
-        return $user;
+            if (!$login = $request->input('login'))
+            {
+                return null;
+            }
+
+            self::$user = (new UserRepository())->findByLogin($login);
+        }
+
+        return self::$user;
     }
 }

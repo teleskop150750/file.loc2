@@ -20,4 +20,14 @@ class ParameterBag
     {
         return $this->parameters[$key] ?? $default;
     }
+
+    public function has(string $key): bool
+    {
+        return \array_key_exists($key, $this->parameters);
+    }
+
+    public function all(): array
+    {
+        return $this->parameters;
+    }
 }

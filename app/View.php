@@ -16,8 +16,8 @@ class View
      */
     public static function make(string $view, array $data = [], string $layout = 'default'): string
     {
-        $layoutPath = APP_ROOT.'/templates/Views/Layouts/'.$layout.'.php';
-        $file = APP_ROOT.'/templates/Views/'.$view.'.php';
+        $layoutPath = APP_ROOT.'/app/templates/Views/Layouts/'.$layout.'.php';
+        $file = APP_ROOT.'/app/templates/Views/'.$view.'.php';
 
         $content = null;
 

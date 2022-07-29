@@ -4,18 +4,17 @@ namespace FileManager\Repositories;
 
 use FileManager\DB\DB;
 use FileManager\Entity\FileEntity;
+use FileManager\Entity\UserEntity;
+use RuntimeException;
 
 class FileRepository extends Repository
 {
-    public function __construct()
-    {
-        $this->entity = new FileEntity();
-    }
-
     public function save(FileEntity $file): void
     {
+        $table = FileEntity::$table;
+
         DB::query(
-            "INSERT INTO files ( `id`, `name`, `origin_name`, `path`, `url`, `hash`, `user_id`)  VALUES (?, ?, ?, ?, ?, ?, ?)"
+            "INSERT INTO `{$table}` ( `id`, `name`, `origin_name`, `path`, `url`, `hash`, `user_id`)  VALUES (?, ?, ?, ?, ?, ?, ?)"
         )->bind([
             $file->getId(),
             $file->getName(),
@@ -29,7 +28,9 @@ class FileRepository extends Repository
 
     public function find(string $id): FileEntity|null
     {
-        if ($file = DB::query("SELECT * FROM `{$this->entity->table}` WHERE id = ?")->bind($id)->first()) {
+        $table = FileEntity::$table;
+
+        if ($file = DB::query("SELECT * FROM `{$table}` WHERE id = ?")->bind($id)->first()) {
             return new FileEntity(
                 $file['id'],
                 $file['name'],
@@ -37,7 +38,7 @@ class FileRepository extends Repository
                 $file['path'],
                 $file['url'],
                 $file['hash'],
-                $file['user_id'],
+                (int) $file['user_id'],
                 $file['created_at'],
             );
         }
@@ -47,7 +48,9 @@ class FileRepository extends Repository
 
     public function findByHash(string $hash): FileEntity|null
     {
-        if ($file = DB::query("SELECT * FROM `{$this->entity->table}` WHERE hash = ?")->bind($hash)->first()) {
+        $table = FileEntity::$table;
+
+        if ($file = DB::query("SELECT * FROM `{$table}` WHERE hash = ?")->bind($hash)->first()) {
             return new FileEntity(
                 $file['id'],
                 $file['name'],
@@ -55,7 +58,7 @@ class FileRepository extends Repository
                 $file['path'],
                 $file['url'],
                 $file['hash'],
-                $file['user_id'],
+                (int) $file['user_id'],
                 $file['created_at'],
             );
         }
@@ -65,7 +68,8 @@ class FileRepository extends Repository
 
     public function all(): array
     {
-        $files = DB::query("SELECT * FROM `{$this->entity->table}`")->all();
+        $table = FileEntity::$table;
+        $files = DB::query("SELECT * FROM `{$table}`")->all();
 
         return array_map(static function ($file) {
             return new FileEntity(
@@ -75,7 +79,7 @@ class FileRepository extends Repository
                 $file['path'],
                 $file['url'],
                 $file['hash'],
-                $file['user_id'],
+                (int) $file['user_id'],
                 $file['created_at'],
             );
         }, $files);
@@ -83,16 +87,32 @@ class FileRepository extends Repository
 
     public function delete(string $id): void
     {
-        DB::query("DELETE FROM files WHERE id = ?")->bind($id)->execute();
+        $table = FileEntity::$table;
+        DB::query("DELETE FROM `{$table}` WHERE id = ?")->bind($id)->execute();
     }
 
     public function existsId(string $id): bool
     {
-        return (bool) DB::query("SELECT id FROM `{$this->entity->table}` WHERE id = ?")->bind($id)->first();
+        $table = FileEntity::$table;
+
+        return (bool) DB::query("SELECT id FROM `{$table}` WHERE id = ?")->bind($id)->first();
     }
 
     public function countByHash(string $hash): int
     {
-        return DB::query("SELECT id FROM files WHERE hash = ?")->bind($hash)->count();
+        $table = FileEntity::$table;
+
+        return DB::query("SELECT id FROM `{$table}` WHERE hash = ?")->bind($hash)->count();
+    }
+
+    public function user(int $id): UserEntity
+    {
+        $user = (new UserRepository())->find($id);
+
+        if (!$user) {
+            throw new RuntimeException('Владелец файла не найден');
+        }
+
+        return $user;
     }
 }

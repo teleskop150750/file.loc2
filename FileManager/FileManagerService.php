@@ -2,6 +2,7 @@
 
 namespace FileManager;
 
+use App\Helper;
 use FileManager\Entity\FileEntity;
 use FileManager\FileSystem\Exception\FileException as FsFileException;
 use FileManager\FileSystem\Storage;
@@ -12,7 +13,10 @@ use FileManager\Http\JsonResponse;
 use FileManager\Http\Request;
 use FileManager\Http\Response;
 use FileManager\Repositories\FileRepository;
-use FileManager\Utils\Str;;
+use FileManager\Utils\Str;
+
+;
+
 use Exception;
 
 class FileManagerService
@@ -41,13 +45,21 @@ class FileManagerService
      */
     public function execute(): Response
     {
+        if (!Auth::check()) {
+            return (new JsonResponse())->setContent([
+                'status' => 'error',
+                'message' => 'Вы не авторизованы',
+            ])->setStatusCode(403);
+        }
+
         $this->fileRepository = new FileRepository();
         $request = Request::createFromGlobals();
-        if ($file = $request->files->get(self::FILE_FIELD_NAME)) {
+
+        if ($file = $request->file(self::FILE_FIELD_NAME)) {
             $response = $this->upload($file);
-        } elseif ($id = $request->query->get(self::DOWNLOAD_GET_PARAMETER)) {
+        } elseif ($id = $request->query(self::DOWNLOAD_GET_PARAMETER)) {
             $response = $this->download($id);
-        } elseif ($id = $request->query->get(self::DELETE_GET_PARAMETER)) {
+        } elseif ($id = $request->query(self::DELETE_GET_PARAMETER)) {
             $response = $this->delete($id);
         } else {
             return (new JsonResponse())->setContent([
@@ -69,13 +81,6 @@ class FileManagerService
     private function upload(UploadedFile $file): Response
     {
         try {
-            if (!Auth::check()) {
-                return (new JsonResponse())->setContent([
-                    'status' => 'error',
-                    'message' => 'Вы не авторизованы',
-                ])->setStatusCode(403);
-            }
-
             if (!$file->isValid()) {
                 throw new FileException($file->getErrorMessage());
             }
@@ -153,24 +158,33 @@ class FileManagerService
 
     private function delete(string $id): Response
     {
-        if ($file = $this->fileRepository->find($id)) {
-            if ($this->fileRepository->countByHash($file->getHash()) === 1) {
-                Storage::delete($file->getPath());
-            }
+        $file = $this->fileRepository->find($id);
 
-            $this->fileRepository->delete($id);
-
-            return (new JsonResponse)->setContent([
-                'status' => 'success',
-                'message' => "Файл удален",
-                'data' => ['id' => $file->getId(),],
-            ]);
+        if (!$file) {
+            return (new JsonResponse())->setContent([
+                'status' => 'error',
+                'message' => 'Файл не найден',
+            ])->setStatusCode(404);
         }
 
-        return (new JsonResponse())->setContent([
-            'status' => 'error',
-            'message' => 'Файл не найден',
-        ])->setStatusCode(404);
+        if (Auth::id() !== $file->getUserId()) {
+            return (new JsonResponse())->setContent([
+                'status' => 'error',
+                'message' => 'Нет прав на удаление',
+            ])->setStatusCode(403);
+        }
+
+        if ($this->fileRepository->countByHash($file->getHash()) === 1) {
+            Storage::delete($file->getPath());
+        }
+
+        $this->fileRepository->delete($id);
+
+        return (new JsonResponse)->setContent([
+            'status' => 'success',
+            'message' => "Файл удален",
+            'data' => ['id' => $file->getId(),],
+        ]);
     }
 
     /**
@@ -178,8 +192,7 @@ class FileManagerService
      *
      * @return string
      */
-    private
-    function makeFileId(): string
+    private function makeFileId(): string
     {
         do {
             $id = Str::random();

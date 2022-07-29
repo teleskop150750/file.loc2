@@ -4,15 +4,13 @@ namespace FileManager\Entity;
 
 class UserEntity extends Entity
 {
-    public string $table = 'users';
+    public static string $table = 'users';
 
 
     public function __construct(
         private ?int $id = null,
-        private ?string $name = null,
-        private ?string $email = null,
+        private ?string $login = null,
         private ?string $password = null,
-        private array $files = [],
     ) {
     }
 
@@ -35,33 +33,17 @@ class UserEntity extends Entity
     /**
      * @return string|null
      */
-    public function getName(): ?string
+    public function getLogin(): ?string
     {
-        return $this->name;
+        return $this->login;
     }
 
     /**
-     * @param  string  $name
+     * @param  string  $login
      */
-    public function setName(string $name): void
+    public function setLogin(string $login): void
     {
-        $this->name = $name;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getEmail(): ?string
-    {
-        return $this->email;
-    }
-
-    /**
-     * @param  string  $email
-     */
-    public function setEmail(string $email): void
-    {
-        $this->email = $email;
+        $this->login = $login;
     }
 
     /**
@@ -78,21 +60,5 @@ class UserEntity extends Entity
     public function setPassword(string $password): void
     {
         $this->password = $password;
-    }
-
-    /**
-     * @return FileEntity[]
-     */
-    public function getFiles(): array
-    {
-        return $this->files;
-    }
-
-    /**
-     * @param  FileEntity[]  $files
-     */
-    public function setFiles(array $files): void
-    {
-        $this->files = $files;
     }
 }

@@ -4,7 +4,7 @@ namespace FileManager\Entity;
 
 class FileEntity extends Entity
 {
-    public string $table = 'files';
+    public static string $table = 'files';
 
     public function __construct(
         private ?string $id = null,

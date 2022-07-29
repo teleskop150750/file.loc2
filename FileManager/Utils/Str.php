@@ -31,4 +31,20 @@ class Str
 
         return $string;
     }
+
+    public static function contains($haystack, $needles, $ignoreCase = false): bool
+    {
+        if ($ignoreCase) {
+            $haystack = mb_strtolower($haystack);
+            $needles = array_map('mb_strtolower', (array) $needles);
+        }
+
+        foreach ((array) $needles as $needle) {
+            if ($needle !== '' && str_contains($haystack, $needle)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

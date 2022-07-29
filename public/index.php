@@ -12,13 +12,17 @@ if (!isset($_SESSION['token']) || (isset($_SESSION['token-expire']) && time() > 
     $_SESSION['token-expire'] = time() + 3600;
 }
 
+//$_POST['login'] = 'login';
+//$_POST['password'] = 'password';
+//$_GET['login'] = 'login';
+//$_GET['password'] = 'password';
+
 /**
  * Настройка автоматической загрузки
  */
 require_once dirname(__DIR__).'/vendor/autoload.php';
 require_once dirname(__DIR__).'/env.php';
-require_once dirname(__DIR__).'/app/migrations.php';
-require_once dirname(__DIR__).'/routes/routes.php';
+require_once dirname(__DIR__).'/app/routes/routes.php';
 
 /**
  * Контроль сообщения об ошибках через переменные среды
