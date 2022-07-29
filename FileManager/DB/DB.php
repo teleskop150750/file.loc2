@@ -16,8 +16,6 @@ class DB
     private static ?self $instance = null;
     private ?mysqli $mysqli = null;
     private ?mysqli_stmt $stmt = null;
-    private string $table = '';
-    private stdClass $query;
 
     private function __construct()
     {
