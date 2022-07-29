@@ -19,9 +19,9 @@ class FileController
      */
     public function index(): string
     {
-        Settings::setDbName('db_file');
-        Settings::setDbUser('root');
-        Settings::setDbPassword('root');
+        Settings::setDbName(DB_NAME);
+        Settings::setDbUser(DB_USER);
+        Settings::setDbPassword(DB_PASS);
         $files = (new FileRepository())->all();
 
         return View::make(
@@ -54,9 +54,9 @@ class FileController
 
     public function fileManager(): void
     {
-        Settings::setDbName('db_file');
-        Settings::setDbUser('root');
-        Settings::setDbPassword('root');
+        Settings::setDbName(DB_NAME);
+        Settings::setDbUser(DB_USER);
+        Settings::setDbPassword(DB_PASS);
         Settings::setStorageDir('public/storage');
         $response = (new FileManagerService())->execute();
         $response->send();
