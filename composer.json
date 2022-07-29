@@ -5,6 +5,7 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
+            "App\\": "app/",
             "FileManager\\": "FileManager/"
         }
     },
@@ -24,9 +25,8 @@
         "voku/portable-ascii": "^2.0",
         "ext-fileinfo": "*",
         "ext-iconv": "*",
-        "ext-intl": "*"
-    }
-    ,
+        "ext-mysqli": "*"
+    },
     "require-dev": {
         "roave/security-advisories": "dev-latest"
     }
