@@ -49,7 +49,7 @@ class FileManagerService
             return (new JsonResponse())->setContent([
                 'status' => 'error',
                 'message' => 'Вы не авторизованы',
-            ])->setStatusCode(403);
+            ])->setStatusCode(401);
         }
 
         $this->fileRepository = new FileRepository();

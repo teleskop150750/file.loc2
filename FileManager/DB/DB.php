@@ -9,12 +9,28 @@ use mysqli;
 use mysqli_result;
 use mysqli_stmt;
 use RuntimeException;
-use stdClass;
 
 class DB
 {
+    /**
+     * Instance
+     *
+     * @var DB |null
+     */
     private static ?self $instance = null;
+
+    /**
+     * Mysqli
+     *
+     * @var mysqli|null
+     */
     private ?mysqli $mysqli = null;
+
+    /**
+     * Mysqli Statement
+     *
+     * @var mysqli_stmt|null
+     */
     private ?mysqli_stmt $stmt = null;
 
     private function __construct()
@@ -29,10 +45,17 @@ class DB
             );
             $this->mysqli->set_charset('utf8mb4');
         } catch (Exception $exception) {
-            echo 'Mysqli Error: '.$exception->getMessage();
+            echo 'Mysqli Error: ' . $exception->getMessage();
         }
     }
 
+    /**
+     * Подготовить запрос
+     *
+     * @param  string  $sql
+     *
+     * @return static
+     */
     public static function query(string $sql): static
     {
         if (!self::$instance) {
@@ -44,7 +67,14 @@ class DB
         return self::$instance;
     }
 
-    public function bind(mixed $params): static
+    /**
+     * Привязать параметры
+     *
+     * @param  int|float|string|array  $params
+     *
+     * @return $this
+     */
+    public function bind(int|float|string|array $params): static
     {
         $params = is_array($params) ? $params : [$params];
         $types = [];
@@ -53,11 +83,16 @@ class DB
             $types[] = $this->getBindType($param);
         }
 
-        $this->stmt->bind_param(implode('', $types), ... $params);
+        $this->stmt->bind_param(implode('', $types), ...$params);
 
         return $this;
     }
 
+    /**
+     * Получить количество
+     *
+     * @return int
+     */
     public function count(): int
     {
         $this->execute();
@@ -65,6 +100,11 @@ class DB
         return (int) $this->getResult()->num_rows;
     }
 
+    /**
+     * Получить первый или null
+     *
+     * @return array|null
+     */
     public function first(): array|null
     {
         $this->execute();
@@ -72,6 +112,11 @@ class DB
         return $this->getResult()->fetch_array(MYSQLI_ASSOC) ?: null;
     }
 
+    /**
+     * Получить все
+     *
+     * @return array
+     */
     public function all(): array
     {
         $this->execute();
@@ -79,6 +124,13 @@ class DB
         return $this->getResult()->fetch_all(MYSQLI_ASSOC);
     }
 
+    /**
+     * Подготовить запрос
+     *
+     * @param  string  $sql
+     *
+     * @return void
+     */
     private function prepare(string $sql): void
     {
         $this->stmt = $this->mysqli->prepare($sql);

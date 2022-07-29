@@ -8,13 +8,13 @@ use App\View;
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="login">Login</label>
                     <input class="focus:outline-none focus:ring-2 focus:ring-indigo-700 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight bg-white focus:outline-none focus:shadow-outline"
-                           id="login" name="login" type="text"
+                           id="login" name="login" type="text" value="login"
                     >
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="password">Pass</label>
                     <input class="focus:outline-none focus:ring-2 focus:ring-indigo-700 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight bg-white focus:outline-none focus:shadow-outline"
-                           id="password" name="password" type="text"
+                           id="password" name="password" type="text" value="password"
                     >
                 </div>
                 <div class="mb-4">
