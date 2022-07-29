@@ -2,11 +2,10 @@
 
 namespace FileManager\FileSystem;
 
+use FileManager\FileSystem\Exception\FileException;
 use FileManager\Settings;
 use FileManager\Utils\Str;
 use finfo;
-use RuntimeException;
-use Symfony\Component\Filesystem\Exception\FileNotFoundException;
 
 class Storage
 {
@@ -60,7 +59,7 @@ class Storage
         error_clear_last();
 
         if (!@unlink($location)) {
-            throw new FileNotFoundException(
+            throw new FileException(
                 sprintf('Не удалось удалить %s. Ошибка %s', $location, error_get_last()['message'])
             );
         }
